@@ -1,0 +1,25 @@
+{
+  "name": "Shotlist Planner — Studio Wallin",
+  "short_name": "Shotlist",
+  "description": "Plan and organize your shot lists for video production",
+  "start_url": "/shotlist-planner/",
+  "scope": "/shotlist-planner/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

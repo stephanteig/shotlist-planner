@@ -1,0 +1,24 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to stephanteig.github.io
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git clone https://x-access-token:${{ secrets.PAGES_TOKEN }}@github.com/stephanteig/stephanteig.github.io.git pages-repo
+          rm -rf pages-repo/shotlist-planner
+          mkdir -p pages-repo/shotlist-planner
+          cp -r src/* pages-repo/shotlist-planner/
+          cd pages-repo
+          git add .
+          git diff --cached --quiet || git commit -m "deploy: update shotlist-planner from ${{ github.sha }}"
+          git push
