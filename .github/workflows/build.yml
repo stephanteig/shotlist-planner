@@ -15,9 +15,6 @@ jobs:
           - platform: macos-latest
             args: "--target aarch64-apple-darwin"
             name: macOS (Apple Silicon)
-          - platform: macos-13
-            args: "--target x86_64-apple-darwin"
-            name: macOS (Intel)
           - platform: windows-latest
             args: ""
             name: Windows
@@ -36,7 +33,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
 
       - name: Install npm dependencies
         run: npm install
@@ -48,7 +45,15 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Shotlist Planner ${{ github.ref_name }}"
-          releaseBody: "Download the installer for your platform below."
+          releaseBody: |
+            ## Download
+
+            | Platform | File |
+            |----------|------|
+            | macOS (Apple Silicon) | `.dmg` |
+            | Windows | `.msi` (installer) or `.exe` (portable) |
+
+            > **macOS:** If blocked by Gatekeeper, right-click → Open → Open
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
