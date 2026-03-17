@@ -1,0 +1,27 @@
+{
+  "productName": "Shotlist Planner",
+  "version": "0.1.0",
+  "identifier": "com.studiowallin.shotlist",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Shotlist Planner — Studio Wallin",
+        "width": 1280,
+        "height": 860,
+        "minWidth": 800,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}

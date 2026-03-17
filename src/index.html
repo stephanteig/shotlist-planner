@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shotlist Planner — Studio Wallin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080808; --surface: #0f0f0f; --surface2: #141414;
+  --border: #1e1e1e; --border2: #2a2a2a;
+  --text: #e8e8e8; --text-dim: #555; --text-mid: #888;
+  --accent: #f0f0f0; --green: #22c55e; --green-bg: #0d2a1a; --green-border: #1e4a2e;
+  --mono: 'DM Mono', monospace; --sans: 'Syne', sans-serif;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+
+header {
+  padding: 18px 28px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.header-left .label { font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 3px; font-family: var(--mono); }
+.header-left h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.header-right { display: flex; gap: 8px; align-items: center; }
+
+.btn { border: 1px solid var(--border2); border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+.btn-primary { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+.btn-primary:hover { background: #d0d0d0; }
+.btn-ghost { background: var(--surface2); color: var(--text-mid); }
+.btn-ghost:hover { color: var(--text); background: #1e1e1e; }
+.btn-danger { background: transparent; color: #555; border-color: transparent; font-size: 11px; }
+.btn-danger:hover { color: #f87171; }
+
+.app { display: grid; grid-template-columns: 1fr 360px; flex: 1; overflow: hidden; min-height: 0; }
+
+/* EDITOR */
+.editor { padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* PROJECT META */
+.project-meta {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+}
+.meta-field label { display: block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); font-weight: 500; margin-bottom: 4px; }
+.meta-field input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border2); color: var(--text); font-size: 13px; font-family: var(--mono); outline: none; padding: 3px 0; }
+.meta-field input::placeholder { color: var(--text-dim); }
+
+/* TEMPLATES BAR */
+.template-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.template-bar .label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); font-weight: 500; }
+.btn-tpl { background: transparent; border: 1px solid var(--border); border-radius: 5px; padding: 5px 12px; font-size: 11px; font-weight: 600; font-family: var(--sans); color: var(--text-mid); cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; }
+.btn-tpl:hover { border-color: var(--border2); color: var(--text); }
+
+/* SECTIONS */
+.sections { display: flex; flex-direction: column; gap: 14px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: var(--mono); font-size: 12px; border: 1px dashed var(--border); border-radius: 10px; }
+
+.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.section-header {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border-bottom: 1px solid var(--border); background: var(--surface2);
+  cursor: grab;
+}
+.section-header:active { cursor: grabbing; }
+.section-grip { color: var(--text-dim); font-size: 14px; user-select: none; }
+.section-name-input {
+  flex: 1; background: transparent; border: none; color: var(--accent);
+  font-size: 12px; font-weight: 700; font-family: var(--sans); letter-spacing: 0.1em;
+  text-transform: uppercase; outline: none;
+}
+.section-name-input::placeholder { color: var(--text-dim); }
+.section-count { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+.delete-sec { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; line-height: 1; padding: 0; transition: color 0.12s; }
+.delete-sec:hover { color: #f87171; }
+
+.section-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+/* ROWS */
+.row-item { display: flex; align-items: flex-start; gap: 10px; padding: 5px 6px; border-radius: 6px; transition: background 0.1s; }
+.row-item:hover { background: #111; }
+.row-item:hover .row-actions { opacity: 1 !important; }
+
+.row-type-dot {
+  width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0;
+}
+.dot-shot { background: #4ade80; }
+.dot-note { background: #60a5fa; }
+.dot-quote { background: #f59e0b; }
+
+.row-checkbox { width: 14px; height: 14px; border: 1px solid var(--border2); border-radius: 3px; margin-top: 4px; flex-shrink: 0; cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; }
+.row-checkbox.checked { background: var(--green); border-color: var(--green); }
+.row-checkbox.checked::after { content: '✓'; color: white; font-size: 9px; }
+
+.row-text {
+  flex: 1; background: transparent; border: none; color: var(--text); font-size: 13px;
+  font-family: var(--mono); outline: none; resize: none; line-height: 1.5; padding: 0;
+  min-height: 20px; overflow: hidden;
+}
+.row-text::placeholder { color: var(--text-dim); }
+.row-text.quote-style { color: #f59e0b; font-style: italic; }
+.row-text.note-style { color: #9ca3af; font-size: 12px; }
+
+.row-actions { opacity: 0; display: flex; gap: 4px; align-items: center; transition: opacity 0.15s; margin-top: 2px; }
+.row-actions button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 2px 4px; border-radius: 3px; font-family: var(--mono); transition: color 0.12s; }
+.row-actions button:hover { color: var(--text); }
+
+/* ADD ROW BUTTONS */
+.add-row-bar { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.btn-row { background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; font-family: var(--mono); cursor: pointer; transition: all 0.12s; letter-spacing: 0.03em; }
+.btn-row.shot { color: #4ade80; border-color: rgba(74,222,128,0.2); }
+.btn-row.shot:hover { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.4); }
+.btn-row.note { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+.btn-row.note:hover { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.4); }
+.btn-row.quote { color: #f59e0b; border-color: rgba(245,158,11,0.2); }
+.btn-row.quote:hover { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.4); }
+
+.add-section-btn { background: transparent; border: 1px dashed var(--border2); border-radius: 8px; padding: 12px; font-size: 12px; font-family: var(--mono); color: var(--text-dim); cursor: pointer; transition: all 0.15s; width: 100%; text-align: center; letter-spacing: 0.05em; }
+.add-section-btn:hover { border-color: var(--border2); color: var(--text-mid); background: var(--surface); }
+
+/* SIDEBAR */
+.sidebar { border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.sidebar-header .label { font-size: 10px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; font-family: var(--mono); }
+.stats { font-size: 11px; font-family: var(--mono); color: var(--text-dim); }
+.preview-wrap { flex: 1; overflow-y: auto; padding: 14px 18px; }
+pre#preview { font-family: var(--mono); font-size: 11.5px; line-height: 1.85; color: #aaa; white-space: pre-wrap; word-break: break-word; }
+.preview-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: var(--mono); font-size: 12px; }
+
+.btn-copy { background: var(--green-bg); color: var(--green); border: none; border-top: 1px solid var(--green-border); width: 100%; padding: 13px; font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; flex-shrink: 0; }
+.btn-copy:hover { background: #0f3a20; }
+.btn-copy.copied { color: #4ade80; background: #0a2a14; }
+
+.status-bar { padding: 7px 18px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 10px 18px; border-radius: 7px; font-family: var(--mono); font-size: 11px; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 9999; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { border-left: none; border-top: 1px solid var(--border); max-height: 380px; }
+  .project-meta { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="label">Studio Wallin</div>
+    <h1>Shotlist Planner</h1>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="clearAll()">Nullstill</button>
+    <button class="btn btn-primary" onclick="addSection()">+ Seksjon</button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="editor" id="editor">
+
+    <!-- PROJECT META -->
+    <div class="project-meta">
+      <div class="meta-field">
+        <label>Prosjekt / Kunde</label>
+        <input id="metaClient" type="text" placeholder="f.eks. Ola Nordmann" oninput="save()">
+      </div>
+      <div class="meta-field">
+        <label>Dato for opptak</label>
+        <input id="metaDate" type="date" oninput="save()" style="color-scheme:dark">
+      </div>
+      <div class="meta-field">
+        <label>Fotograf / Kamera</label>
+        <input id="metaCrew" type="text" placeholder="f.eks. Stephan / Markus" oninput="save()">
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="template-bar">
+      <span class="label">Mal:</span>
+      <button class="btn-tpl" onclick="loadTemplate('bolig')">Boligsalg</button>
+      <button class="btn-tpl" onclick="loadTemplate('intervju')">Intervju</button>
+      <button class="btn-tpl" onclick="loadTemplate('social')">SoMe</button>
+      <button class="btn-tpl" onclick="loadTemplate('event')">Event</button>
+      <button class="btn-tpl" onclick="loadTemplate('produkt')">Produkt</button>
+      <button class="btn-tpl" onclick="loadTemplate('podcast')">Podcast-video</button>
+      <button class="btn-tpl" onclick="loadTemplate('testimonial')">Testimonial</button>
+      <button class="btn-tpl" onclick="loadTemplate('bts')">Behind the Scenes</button>
+      <button class="btn-tpl" onclick="loadTemplate('brand')">Brand film</button>
+    </div>
+
+    <!-- SECTIONS -->
+    <div class="sections" id="sections">
+      <div class="empty-state">Klikk «+ Seksjon» eller velg en mal for å starte</div>
+    </div>
+
+    <button class="add-section-btn" onclick="addSection()">+ Legg til seksjon</button>
+
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="label">Milanote-forhåndsvisning</span>
+      <span class="stats" id="stats">0 shots</span>
+    </div>
+    <div class="preview-wrap">
+      <pre id="preview"><div class="preview-empty">Formattert shotlist vises her...</div></pre>
+    </div>
+    <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">Kopier til Milanote</button>
+    <div class="status-bar" id="statusBar">Klar</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let sections = [];
+let meta = { client: '', date: '', crew: '' };
+let dragSrc = null;
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('sw-shotlist-v2');
+  if (saved) {
+    const d = JSON.parse(saved);
+    sections = d.sections || [];
+    meta = d.meta || {};
+    document.getElementById('metaClient').value = meta.client || '';
+    document.getElementById('metaDate').value = meta.date || '';
+    document.getElementById('metaCrew').value = meta.crew || '';
+  }
+  renderAll();
+});
+
+function getMeta() {
+  return {
+    client: document.getElementById('metaClient').value,
+    date: document.getElementById('metaDate').value,
+    crew: document.getElementById('metaCrew').value,
+  };
+}
+
+function save() {
+  meta = getMeta();
+  localStorage.setItem('sw-shotlist-v2', JSON.stringify({ sections, meta }));
+  const now = new Date();
+  document.getElementById('statusBar').textContent =
+    `Lagret ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+// ── MODELS ─────────────────────────────────────────────────────────────────
+function makeSection(name = '', rows = null) {
+  return {
+    id: Date.now() + Math.random(),
+    name,
+    rows: rows || [],
+  };
+}
+
+// type: 'shot' | 'note' | 'quote'
+function makeRow(type = 'shot', text = '', checked = false) {
+  return { id: Date.now() + Math.random(), type, text, checked };
+}
+
+// ── SECTIONS ───────────────────────────────────────────────────────────────
+function addSection(name = '') {
+  sections.push(makeSection(name));
+  renderAll();
+  save();
+}
+
+function deleteSection(id) {
+  sections = sections.filter(s => s.id !== id);
+  renderAll();
+  save();
+}
+
+function updateSectionName(id, val) {
+  const sec = sections.find(s => s.id === id);
+  if (sec) { sec.name = val; updatePreview(); save(); }
+}
+
+// ── ROWS ───────────────────────────────────────────────────────────────────
+function addRow(secId, type) {
+  const sec = sections.find(s => s.id === secId);
+  if (!sec) return;
+  const row = makeRow(type);
+  sec.rows.push(row);
+  renderAll();
+  save();
+  // Focus new textarea
+  requestAnimationFrame(() => {
+    const el = document.getElementById(`row-${row.id}`);
+    if (el) { el.focus(); autoResize(el); }
+  });
+}
+
+function deleteRow(secId, rowId) {
+  const sec = sections.find(s => s.id === secId);
+  if (sec) sec.rows = sec.rows.filter(r => r.id !== rowId);
+  renderAll();
+  save();
+}
+
+function updateRow(secId, rowId, field, val) {
+  const sec = sections.find(s => s.id === secId);
+  if (!sec) return;
+  const row = sec.rows.find(r => r.id === rowId);
+  if (row) { row[field] = val; updatePreview(); save(); }
+}
+
+function toggleCheck(secId, rowId) {
+  const sec = sections.find(s => s.id === secId);
+  if (!sec) return;
+  const row = sec.rows.find(r => r.id === rowId);
+  if (row) { row.checked = !row.checked; updatePreview(); save(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderSections();
+  updatePreview();
+  const shots = sections.reduce((a, s) => a + s.rows.filter(r => r.type === 'shot').length, 0);
+  document.getElementById('stats').textContent = `${shots} shots · ${sections.length} seksjoner`;
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
+  if (!sections.length) {
+    container.innerHTML = `<div class="empty-state">Klikk «+ Seksjon» eller velg en mal for å starte</div>`;
+    return;
+  }
+
+  container.innerHTML = sections.map(sec => `
+    <div class="section-card" data-id="${sec.id}"
+         draggable="true"
+         ondragstart="sdStart(event)" ondragover="sdOver(event)" ondrop="sdDrop(event)" ondragend="sdEnd(event)">
+      <div class="section-header">
+        <span class="section-grip">⋮⋮</span>
+        <input class="section-name-input" type="text" value="${esc(sec.name)}"
+               placeholder="SEKSJONSOVERSKRIFT"
+               oninput="updateSectionName(${sec.id}, this.value)">
+        <span class="section-count">${sec.rows.filter(r=>r.type==='shot').length} shots</span>
+        <button class="delete-sec" onclick="deleteSection(${sec.id})">×</button>
+      </div>
+      <div class="section-body">
+        ${sec.rows.map(row => renderRow(sec.id, row)).join('')}
+        <div class="add-row-bar">
+          <button class="btn-row shot" onclick="addRow(${sec.id}, 'shot')">+ Shot</button>
+          <button class="btn-row note" onclick="addRow(${sec.id}, 'note')">+ Notat</button>
+          <button class="btn-row quote" onclick="addRow(${sec.id}, 'quote')">+ Sitat</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Restore textarea heights
+  document.querySelectorAll('.row-text').forEach(autoResize);
+}
+
+function renderRow(secId, row) {
+  const dotClass = row.type === 'shot' ? 'dot-shot' : row.type === 'quote' ? 'dot-quote' : 'dot-note';
+  const textClass = row.type === 'quote' ? 'quote-style' : row.type === 'note' ? 'note-style' : '';
+  const placeholder = row.type === 'shot' ? 'f.eks. Wide av stue · Clossup detalj' :
+                      row.type === 'quote' ? '"Sitat fra intervjuobjekt..."' :
+                      'Notat / instruksjon...';
+
+  const checkbox = row.type === 'shot'
+    ? `<div class="row-checkbox ${row.checked ? 'checked' : ''}" onclick="toggleCheck(${secId}, ${row.id})"></div>`
+    : `<div style="width:14px;flex-shrink:0"></div>`;
+
+  return `
+    <div class="row-item">
+      <div class="row-type-dot ${dotClass}"></div>
+      ${checkbox}
+      <textarea id="row-${row.id}" class="row-text ${textClass}"
+                rows="1"
+                placeholder="${placeholder}"
+                oninput="updateRow(${secId}, ${row.id}, 'text', this.value); autoResize(this)"
+                onkeydown="handleRowKey(event, ${secId}, ${row.id})"
+      >${esc(row.text)}</textarea>
+      <div class="row-actions">
+        <button onclick="deleteRow(${secId}, ${row.id})" title="Slett">×</button>
+      </div>
+    </div>
+  `;
+}
+
+function handleRowKey(e, secId, rowId) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const sec = sections.find(s => s.id === secId);
+    if (!sec) return;
+    const rowIdx = sec.rows.findIndex(r => r.id === rowId);
+    const currentType = sec.rows[rowIdx]?.type || 'shot';
+    addRow(secId, currentType);
+  }
+}
+
+// ── PREVIEW ────────────────────────────────────────────────────────────────
+function updatePreview() {
+  const el = document.getElementById('preview');
+  if (!sections.length) {
+    el.innerHTML = '<div class="preview-empty">Formattert shotlist vises her...</div>';
+    return;
+  }
+
+  const m = getMeta();
+  let out = '';
+
+  // Header
+  if (m.client || m.date) {
+    const dateStr = m.date ? formatDate(m.date) : '';
+    out += `Shotlist${dateStr ? ' ' + dateStr : ''}${m.client ? ' — ' + m.client : ''}\n`;
+    if (m.crew) out += `Fotograf: ${m.crew}\n`;
+    out += '─'.repeat(36) + '\n\n';
+  }
+
+  sections.forEach(sec => {
+    if (sec.name) out += `${sec.name.toUpperCase()}\n\n`;
+    sec.rows.forEach(row => {
+      if (!row.text.trim()) return;
+      if (row.type === 'shot') {
+        out += `☐ ${row.text}\n`;
+      } else if (row.type === 'quote') {
+        out += `"${row.text}"\n`;
+      } else {
+        out += `${row.text}\n`;
+      }
+    });
+    out += '\n';
+  });
+
+  const shots = sections.reduce((a, s) => a + s.rows.filter(r => r.type === 'shot').length, 0);
+  out += `─`.repeat(36) + `\n${shots} shots totalt`;
+
+  el.textContent = out;
+}
+
+function formatDate(ds) {
+  if (!ds) return '';
+  const d = new Date(ds + 'T00:00:00');
+  const days = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+  const months = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+}
+
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── COPY ───────────────────────────────────────────────────────────────────
+function copyToClipboard() {
+  const text = document.getElementById('preview').textContent;
+  if (!sections.length) return;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✓ Kopiert! Lim inn i Milanote');
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopier til Milanote'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function clearAll() {
+  if (!confirm('Nullstille alt?')) return;
+  sections = [];
+  renderAll();
+  save();
+}
+
+// ── SECTION DRAG & DROP ────────────────────────────────────────────────────
+function sdStart(e) { dragSrc = e.currentTarget; dragSrc.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
+function sdOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function sdDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  if (!dragSrc || dragSrc === target) return;
+  const si = sections.findIndex(s => s.id === parseFloat(dragSrc.dataset.id));
+  const ti = sections.findIndex(s => s.id === parseFloat(target.dataset.id));
+  if (si < 0 || ti < 0) return;
+  const [m] = sections.splice(si, 1);
+  sections.splice(ti, 0, m);
+  renderAll();
+  save();
+}
+function sdEnd(e) { if (dragSrc) dragSrc.style.opacity = '1'; dragSrc = null; }
+
+// ── TEMPLATES ──────────────────────────────────────────────────────────────
+const templates = {
+  bolig: [
+    { name: 'Åpning', rows: [
+      { type: 'note', text: 'Ute? Drone?' },
+      { type: 'shot', text: 'Ute' },
+      { type: 'shot', text: 'Drone' },
+      { type: 'note', text: 'Markus i ute som ser forbi llike' },
+    ]},
+    { name: 'Kjøkken / Spisepass', rows: [
+      { type: 'shot', text: 'Wide av kjøkken' },
+      { type: 'shot', text: 'Wide av spisebordet' },
+      { type: 'shot', text: 'Clossup Detalj kjøkken' },
+      { type: 'shot', text: 'Clossup detalj font' },
+      { type: 'shot', text: 'Clossup flisplikt logo' },
+      { type: 'shot', text: 'Clossup logo sikmens' },
+    ]},
+    { name: 'Stue', rows: [
+      { type: 'shot', text: 'Markus mitt i stua med viceaner' },
+      { type: 'shot', text: 'Wide av tom stue' },
+      { type: 'shot', text: 'Wide av alle soner' },
+      { type: 'shot', text: 'Clossup av stue detaljer' },
+      { type: 'shot', text: 'Clossup av koselenk' },
+      { type: 'shot', text: 'Clossup av spiselenk med stua i BG' },
+    ]},
+    { name: 'Minste soverom', rows: [
+      { type: 'shot', text: 'Clossup detalj (horisontalt)' },
+      { type: 'shot', text: 'Clossup skap' },
+      { type: 'shot', text: 'Clossup detaljer' },
+      { type: 'shot', text: 'Wide av rom' },
+    ]},
+    { name: 'Hovedsoverom', rows: [
+      { type: 'shot', text: 'Wide av tomt rom' },
+      { type: 'shot', text: 'Wide av seng' },
+      { type: 'shot', text: 'Wide av garderobeskop' },
+      { type: 'shot', text: 'Clossup av garderobeskop' },
+      { type: 'shot', text: 'Clossup av andre detaljer' },
+    ]},
+    { name: 'Standard / Tekniske kvaliteter', rows: [
+      { type: 'shot', text: 'Wide av gulvvarmstyring' },
+      { type: 'shot', text: 'Clossup av varmepumpe' },
+      { type: 'shot', text: 'Clossup/Wide av passivhus?' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'quote', text: 'Kunne du tenke deg å se en slik leilighet, eller er nygjerrlig på noe av det vi har til salgs i Virkebyen, er det bare å ta kontakt med oss. Vi har noe som passer alle' },
+      { type: 'shot', text: 'Ute av markus som snakker' },
+    ]},
+  ],
+  intervju: [
+    { name: 'Åpning', rows: [
+      { type: 'shot', text: 'Total — sett opp' },
+      { type: 'shot', text: 'Halvtotal — intervjuobjekt' },
+      { type: 'note', text: 'Sjekk lys og bakgrunn' },
+    ]},
+    { name: 'Hoveddel', rows: [
+      { type: 'shot', text: 'Halvnær — snakker til kamera' },
+      { type: 'shot', text: 'Nær — ansikt' },
+      { type: 'shot', text: 'Clossup — hender/detalj' },
+      { type: 'shot', text: 'Reaksjon — lytter' },
+    ]},
+    { name: 'B-roll', rows: [
+      { type: 'shot', text: 'Miljø — arbeidssted/kontekst' },
+      { type: 'shot', text: 'Detaljer — relevant produkt/sted' },
+      { type: 'shot', text: 'Cutaway — publikum eller produkt' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'shot', text: 'Halvnær — avslutningsbudskap' },
+      { type: 'quote', text: 'Avslutningssitat fra intervjuobjekt' },
+    ]},
+  ],
+  social: [
+    { name: 'Hook (0–2 sek)', rows: [
+      { type: 'shot', text: 'Nær — fang oppmerksomhet' },
+      { type: 'note', text: 'Sterk åpning, ingen innledning' },
+    ]},
+    { name: 'Hoveddel', rows: [
+      { type: 'shot', text: 'Halvnær — forklaring/demo' },
+      { type: 'shot', text: 'B-roll — produkt/miljø' },
+      { type: 'shot', text: 'Cutaway — detalj' },
+    ]},
+    { name: 'Hook SoMe', rows: [
+      { type: 'note', text: 'Forslag fra Emilia:' },
+      { type: 'quote', text: 'Hookforslag 1' },
+      { type: 'quote', text: 'Hookforslag 2' },
+    ]},
+    { name: 'Outro / CTA', rows: [
+      { type: 'shot', text: 'Halvnær — se i kamera' },
+      { type: 'note', text: 'Tydelig call-to-action' },
+    ]},
+  ],
+  event: [
+    { name: 'Ankomst', rows: [
+      { type: 'shot', text: 'Drone — oversikt' },
+      { type: 'shot', text: 'Wide — inngang/fasade' },
+      { type: 'shot', text: 'Cutaway — skilt/logo' },
+    ]},
+    { name: 'Detaljer', rows: [
+      { type: 'shot', text: 'Clossup — dekor/setup' },
+      { type: 'shot', text: 'Wide — lokalet fyller seg' },
+    ]},
+    { name: 'Program / Scene', rows: [
+      { type: 'shot', text: 'Wide — scene/talerstol' },
+      { type: 'shot', text: 'Halvnær — taler' },
+      { type: 'shot', text: 'Reaksjon — publikum' },
+    ]},
+    { name: 'Intervjuer på stedet', rows: [
+      { type: 'shot', text: 'Halvnær — deltaker 1' },
+      { type: 'shot', text: 'Halvnær — deltaker 2' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'shot', text: 'Wide — stemning' },
+      { type: 'shot', text: 'Drone — utgang' },
+    ]},
+  ],
+  produkt: [
+    { name: 'Hero', rows: [
+      { type: 'shot', text: 'Wide — produkt sentrert, ren bakgrunn' },
+      { type: 'shot', text: 'Halvtotal — kontekstuell' },
+    ]},
+    { name: 'Detaljer', rows: [
+      { type: 'shot', text: 'Ekstrem nær — tekstur/overflate' },
+      { type: 'shot', text: 'Clossup — logo/merking' },
+      { type: 'shot', text: 'Clossup — nøkkelfunksjon' },
+    ]},
+    { name: 'I bruk', rows: [
+      { type: 'shot', text: 'Halvtotal — bruker med produkt' },
+      { type: 'shot', text: 'Nær — hender i bruk' },
+      { type: 'shot', text: 'POV — brukers perspektiv' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'shot', text: 'Wide — produkt + miljø' },
+      { type: 'shot', text: 'Hero shot — logo synlig' },
+    ]},
+  ],
+
+  podcast: [
+    { name: 'Rigg / Pre-show', rows: [
+      { type: 'note', text: 'Sjekk lys, mikrofoner og bakgrunn' },
+      { type: 'shot', text: 'Wide — full sett-up, begge verter' },
+      { type: 'shot', text: 'Halvtotal — kamera A (hoved)' },
+      { type: 'shot', text: 'Halvtotal — kamera B (gjest/co-host)' },
+    ]},
+    { name: 'Innledning', rows: [
+      { type: 'shot', text: 'Nær — vert ser i kamera, intro' },
+      { type: 'shot', text: 'Cutaway — logo/tittelskilt' },
+      { type: 'note', text: 'La dem snakke naturlig før opptaket starter' },
+    ]},
+    { name: 'Hoveddel — samtale', rows: [
+      { type: 'shot', text: 'Halvnær — aktiv taler (A-cam)' },
+      { type: 'shot', text: 'Halvnær — lytter/reaksjon (B-cam)' },
+      { type: 'shot', text: 'Over skulder — dynamisk kutt' },
+      { type: 'shot', text: 'Nær — hender/kroppsspråk' },
+    ]},
+    { name: 'B-roll / Cutaways', rows: [
+      { type: 'shot', text: 'Clossup — mikrofon i bruk' },
+      { type: 'shot', text: 'Clossup — headphones/utstyr' },
+      { type: 'shot', text: 'Cutaway — notatbok, skjerm, detaljer' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'shot', text: 'Wide — begge verter, naturlig avslutning' },
+      { type: 'shot', text: 'Nær — vert ser i kamera, outro' },
+      { type: 'quote', text: 'Avslutningssitat / call to action' },
+    ]},
+  ],
+
+  testimonial: [
+    { name: 'Åpning / Etablering', rows: [
+      { type: 'shot', text: 'Wide — kunde i sitt miljø' },
+      { type: 'shot', text: 'Halvtotal — kunde ved arbeidssted/lokasjon' },
+      { type: 'note', text: 'Vis kontekst — hvem er denne personen?' },
+    ]},
+    { name: 'Intervju', rows: [
+      { type: 'shot', text: 'Halvnær — kunde snakker (hoved)' },
+      { type: 'shot', text: 'Nær — ansikt og reaksjoner' },
+      { type: 'shot', text: 'Over skulder — fra intervjuers side' },
+      { type: 'quote', text: 'Nøkkel-sitat fra kunden' },
+    ]},
+    { name: 'Produkt / Tjeneste i bruk', rows: [
+      { type: 'shot', text: 'Halvtotal — kunde bruker produktet/tjenesten' },
+      { type: 'shot', text: 'Clossup — hender/skjerm/detalj' },
+      { type: 'shot', text: 'Cutaway — resultat eller leveranse' },
+    ]},
+    { name: 'B-roll', rows: [
+      { type: 'shot', text: 'Miljø — arbeidssted eller lokasjon' },
+      { type: 'shot', text: 'Detaljer — relevant for kundens bransje' },
+    ]},
+    { name: 'Avslutning', rows: [
+      { type: 'shot', text: 'Halvnær — avslutningsbudskap' },
+      { type: 'quote', text: 'Sterkeste sitat — brukes som sluttkort' },
+      { type: 'shot', text: 'Wide — naturlig avslutning i miljø' },
+    ]},
+  ],
+
+  bts: [
+    { name: 'Ankomst / Rigg', rows: [
+      { type: 'shot', text: 'Wide — teamet ankommer lokasjon' },
+      { type: 'shot', text: 'Clossup — utstyr pakkes ut/rigges' },
+      { type: 'shot', text: 'Cutaway — kamera, lys, kabler' },
+      { type: 'note', text: 'Dokumenter riggeprosessen' },
+    ]},
+    { name: 'Under opptak', rows: [
+      { type: 'shot', text: 'Wide — kameramann i aksjon' },
+      { type: 'shot', text: 'Over skulder — monitor/skjerm' },
+      { type: 'shot', text: 'Nær — regissør/produsent gir instrukser' },
+      { type: 'shot', text: 'Cutaway — crew-kommunikasjon' },
+    ]},
+    { name: 'Crew og stemning', rows: [
+      { type: 'shot', text: 'Halvnær — crew i naturlig situasjon' },
+      { type: 'shot', text: 'Cutaway — pause/mat/latter' },
+      { type: 'shot', text: 'Reaksjon — crew ser playback' },
+    ]},
+    { name: 'Avslutning / Wrap', rows: [
+      { type: 'shot', text: 'Wide — pakker ned, stemning' },
+      { type: 'shot', text: 'Halvnær — avsluttende kommentar fra crew' },
+      { type: 'note', text: 'Speil en ansatt til kort avsluttende intervju' },
+    ]},
+  ],
+
+  brand: [
+    { name: 'Identitet / Åpning', rows: [
+      { type: 'shot', text: 'Drone — lokasjon/bedrift ovenfra' },
+      { type: 'shot', text: 'Wide — fasade/inngang med logo' },
+      { type: 'shot', text: 'Clossup — logo/merke' },
+      { type: 'note', text: 'Tonen settes her — vis hvem de er' },
+    ]},
+    { name: 'Mennesker / Kultur', rows: [
+      { type: 'shot', text: 'Wide — team i arbeid' },
+      { type: 'shot', text: 'Halvnær — ansatt i fokus' },
+      { type: 'shot', text: 'Halvnær — ansatt 2' },
+      { type: 'shot', text: 'Nær — hender, detaljer, kompetanse' },
+    ]},
+    { name: 'Produkt / Tjeneste', rows: [
+      { type: 'shot', text: 'Wide — produkt/tjeneste i kontekst' },
+      { type: 'shot', text: 'Halvtotal — demonstrasjon' },
+      { type: 'shot', text: 'Clossup — kvalitetsdetalj' },
+    ]},
+    { name: 'Intervju / Budskap', rows: [
+      { type: 'shot', text: 'Halvnær — leder/grunnlegger' },
+      { type: 'quote', text: 'Kjernebudskap fra ledelse' },
+      { type: 'shot', text: 'Halvnær — ansatt om arbeidshverdagen' },
+      { type: 'quote', text: 'Ansattsitat — autentisk stemme' },
+    ]},
+    { name: 'Avslutning / Logo-kutt', rows: [
+      { type: 'shot', text: 'Wide — team samlet' },
+      { type: 'shot', text: 'Clossup — logo/produkt' },
+      { type: 'shot', text: 'Drone — ut fra lokasjon' },
+      { type: 'note', text: 'Sluttkort: logo + tagline + kontakt' },
+    ]},
+  ],
+
+};
+
+function loadTemplate(key) {
+  if (sections.length && !confirm('Erstatte eksisterende shotlist med mal?')) return;
+  const tpl = templates[key];
+  if (!tpl) return;
+  sections = tpl.map(s => makeSection(s.name, s.rows.map(r => makeRow(r.type, r.text))));
+  renderAll();
+  save();
+  showToast(`Mal lastet: ${key}`);
+}
+</script>
+</body>
+</html>
