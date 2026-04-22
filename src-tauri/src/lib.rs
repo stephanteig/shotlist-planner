@@ -1,6 +1,6 @@
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 /// Starts an ephemeral HTTP server on a random localhost port to capture the
 /// OAuth redirect. Returns the port. When the redirect arrives it emits
