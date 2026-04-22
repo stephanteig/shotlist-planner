@@ -4,6 +4,8 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  // Use /shotlist-planner/ base when building for GitHub Pages
+  base: process.env.GITHUB_PAGES ? "/shotlist-planner/" : "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
