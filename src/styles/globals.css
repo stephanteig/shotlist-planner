@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme — default */
+    --background: 222 47% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 222 40% 6%;
+    --card-foreground: 213 31% 91%;
+
+    --sidebar: 222 44% 5%;
+    --sidebar-border: 222 35% 10%;
+    --sidebar-foreground: 215 20% 65%;
+
+    --border: 222 35% 12%;
+    --input: 222 35% 10%;
+    --ring: 217 91% 60%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 4%;
+
+    --secondary: 222 35% 12%;
+    --secondary-foreground: 213 31% 91%;
+
+    --muted: 222 35% 10%;
+    --muted-foreground: 215 20% 50%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 222 47% 4%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 213 31% 91%;
+
+    --radius: 0.5rem;
+
+    /* Accent color presets (hsl channel values only) */
+    --accent-blue: 217 91% 60%;
+    --accent-purple: 258 88% 66%;
+    --accent-teal: 173 80% 40%;
+    --accent-orange: 25 95% 53%;
+    --accent-rose: 346 84% 61%;
+
+    /* Section colors */
+    --col-violet: #7c6af7;
+    --col-green: #34d399;
+    --col-blue: #60a5fa;
+    --col-amber: #fbbf24;
+    --col-red: #f87171;
+    --col-pink: #f472b6;
+    --col-teal: #2dd4bf;
+    --col-lavender: #a78bfa;
+
+    /* Font size scale */
+    --font-scale: 1;
+
+    /* Spacing scale (compact mode) */
+    --spacing-scale: 1;
+  }
+
+  /* Font size variants */
+  [data-font-size="small"] { --font-scale: 0.875; }
+  [data-font-size="medium"] { --font-scale: 1; }
+  [data-font-size="large"] { --font-scale: 1.125; }
+
+  /* Compact mode */
+  [data-compact="true"] { --spacing-scale: 0.75; }
+
+  /* Accent color variants */
+  [data-accent="purple"] { --accent: var(--accent-purple); --primary: var(--accent-purple); --ring: var(--accent-purple); }
+  [data-accent="teal"]   { --accent: var(--accent-teal);   --primary: var(--accent-teal);   --ring: var(--accent-teal); }
+  [data-accent="orange"] { --accent: var(--accent-orange); --primary: var(--accent-orange); --ring: var(--accent-orange); }
+  [data-accent="rose"]   { --accent: var(--accent-rose);   --primary: var(--accent-rose);   --ring: var(--accent-rose); }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: calc(1rem * var(--font-scale));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+  }
+
+  /* Allow text selection in inputs and content areas */
+  input, textarea, [data-selectable] {
+    user-select: text;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+}
+
+@layer utilities {
+  .dragging-over {
+    @apply ring-2 ring-primary/50 bg-primary/5;
+  }
+
+  .drag-handle {
+    cursor: grab;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .glass {
+    background: hsla(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Tauri drag region */
+  [data-tauri-drag-region] {
+    -webkit-app-region: drag;
+  }
+
+  /* Non-draggable interactive elements inside drag regions */
+  [data-tauri-drag-region] button,
+  [data-tauri-drag-region] a,
+  [data-tauri-drag-region] input {
+    -webkit-app-region: no-drag;
+  }
+}

@@ -1,18 +1,23 @@
 {
-  "productName": "Shotlist Planner",
+  "productName": "Markr",
   "version": "0.1.0",
-  "identifier": "com.studiowallin.shotlist",
+  "identifier": "io.markr.app",
   "build": {
-    "frontendDist": "../src"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run vite:dev",
+    "beforeBuildCommand": "npm run vite:build"
   },
   "app": {
     "windows": [
       {
-        "title": "Shotlist Planner — Studio Wallin",
+        "title": "Markr",
         "width": 1280,
         "height": 860,
-        "minWidth": 800,
-        "minHeight": 600
+        "minWidth": 900,
+        "minHeight": 620,
+        "decorations": false,
+        "transparent": false
       }
     ],
     "security": {
