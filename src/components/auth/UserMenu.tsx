@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function UserMenu() {
-  const { user, loading, signingIn, signInWithGoogle, signOut } = useAuthStore();
+  const { user, loading, signingIn, signInError, signInWithGoogle, signOut } = useAuthStore();
   const { settings } = useSettingsStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -26,14 +26,21 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <button
-        onClick={signInWithGoogle}
-        disabled={signingIn}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border disabled:opacity-50 disabled:cursor-wait"
-      >
-        <User className="h-3.5 w-3.5" />
-        {signingIn ? "Venter…" : "Logg inn"}
-      </button>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={signInWithGoogle}
+          disabled={signingIn}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border disabled:opacity-50 disabled:cursor-wait"
+        >
+          <User className="h-3.5 w-3.5" />
+          {signingIn ? "Venter…" : "Logg inn"}
+        </button>
+        {signInError && (
+          <div className="max-w-xs text-xs text-red-400 bg-red-950/40 border border-red-800/50 rounded px-2 py-1 break-all">
+            {signInError}
+          </div>
+        )}
+      </div>
     );
   }
 

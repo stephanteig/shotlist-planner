@@ -13,6 +13,7 @@ interface AuthStore {
   user: User | null;
   loading: boolean;
   signingIn: boolean;
+  signInError: string | null;
   firebaseEnabled: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -26,6 +27,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   loading: firebaseEnabled,
   signingIn: false,
+  signInError: null,
   firebaseEnabled,
   _onSignIn: null,
   _onSignOut: null,
@@ -49,22 +51,23 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signInWithGoogle: async () => {
-    if (!firebaseEnabled || !auth) return;
-    set({ signingIn: true });
+    if (!firebaseEnabled || !auth) {
+      set({ signInError: `Firebase not initialised (firebaseEnabled=${firebaseEnabled}, auth=${!!auth})` });
+      return;
+    }
+    set({ signingIn: true, signInError: null });
     try {
       if (isTauri()) {
-        // Desktop: system browser + PKCE flow (avoids tauri:// origin issue)
         const { signInWithGoogleDesktop } = await import("@/lib/auth-desktop");
         await signInWithGoogleDesktop();
       } else {
-        // Web: standard popup flow
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
       }
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
         console.error("Sign-in error:", err);
-        throw err;
+        set({ signInError: err?.message ?? String(err) });
       }
     } finally {
       set({ signingIn: false });
