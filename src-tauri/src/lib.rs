@@ -2,16 +2,19 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use tauri::Emitter;
 
-/// Starts an ephemeral HTTP server on a random localhost port to capture the
-/// OAuth redirect. Returns the port. When the redirect arrives it emits
-/// "oauth::code" with the auth code (or empty string on error/cancel).
+/// Binds an ephemeral localhost port, appends the correct redirect_uri to the
+/// provided Google auth URL, opens it in the system browser, then waits for
+/// the OAuth redirect. Emits "oauth::code" with the auth code when done.
 #[tauri::command]
-fn start_oauth_listener(app_handle: tauri::AppHandle) -> Result<u16, String> {
+fn start_oauth_listener(app_handle: tauri::AppHandle, url: String) -> Result<u16, String> {
     let listener = TcpListener::bind("127.0.0.1:0").map_err(|e| e.to_string())?;
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
 
+    // Append redirect_uri now that we know the port
+    let full_url = format!("{}&redirect_uri=http://127.0.0.1:{}", url, port);
+    open::that_detached(&full_url).map_err(|e| format!("Failed to open browser: {e}"))?;
+
     std::thread::spawn(move || {
-        // Wait for one connection (the browser redirect)
         let Ok((mut stream, _)) = listener.accept() else {
             let _ = app_handle.emit("oauth::code", "");
             return;
@@ -21,7 +24,6 @@ fn start_oauth_listener(app_handle: tauri::AppHandle) -> Result<u16, String> {
         let n = stream.read(&mut buf).unwrap_or(0);
         let request = String::from_utf8_lossy(&buf[..n]);
 
-        // Extract code from "GET /?code=xxx&... HTTP/1.1"
         let code = request
             .lines()
             .next()
@@ -33,7 +35,6 @@ fn start_oauth_listener(app_handle: tauri::AppHandle) -> Result<u16, String> {
                     .and_then(|p| p.splitn(2, '=').nth(1).map(String::from))
             });
 
-        // Respond — page closes itself
         let html = r#"<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
 body{background:#0a0a0f;color:#e1e7ef;font-family:sans-serif;
@@ -54,7 +55,6 @@ display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
             html
         );
         let _ = stream.write_all(response.as_bytes());
-
         let _ = app_handle.emit("oauth::code", code.unwrap_or_default());
     });
 
