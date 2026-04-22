@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function UserMenu() {
-  const { user, loading, signInWithGoogle, signOut } = useAuthStore();
+  const { user, loading, signingIn, signInWithGoogle, signOut } = useAuthStore();
   const { settings } = useSettingsStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -28,10 +28,11 @@ export function UserMenu() {
     return (
       <button
         onClick={signInWithGoogle}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border"
+        disabled={signingIn}
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border disabled:opacity-50 disabled:cursor-wait"
       >
         <User className="h-3.5 w-3.5" />
-        Logg inn
+        {signingIn ? "Venter…" : "Logg inn"}
       </button>
     );
   }
