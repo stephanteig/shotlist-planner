@@ -161,9 +161,12 @@ pre#preview { font-family: var(--mono); font-size: 11.5px; line-height: 1.85; co
   </div>
   <div class="header-right">
     <button class="btn btn-ghost" onclick="clearAll()">Nullstill</button>
+    <button class="btn btn-ghost" onclick="importShot()" title="Importer .swshot-fil">↑ Importer</button>
+    <button class="btn btn-ghost" onclick="exportShot()" title="Eksporter som .swshot-fil">↓ Eksporter</button>
     <button class="btn btn-primary" onclick="addSection()">+ Seksjon</button>
   </div>
 </header>
+<input type="file" id="importFileInput" accept=".swshot,.json" style="display:none" onchange="handleImportFile(event)">
 
 <div class="app">
   <div class="editor" id="editor">
@@ -267,7 +270,6 @@ function makeSection(name = '', rows = null) {
   };
 }
 
-// type: 'shot' | 'note' | 'quote'
 function makeRow(type = 'shot', text = '', checked = false) {
   return { id: Date.now() + Math.random(), type, text, checked };
 }
@@ -298,7 +300,6 @@ function addRow(secId, type) {
   sec.rows.push(row);
   renderAll();
   save();
-  // Focus new textarea
   requestAnimationFrame(() => {
     const el = document.getElementById(`row-${row.id}`);
     if (el) { el.focus(); autoResize(el); }
@@ -369,7 +370,6 @@ function renderSections() {
     </div>
   `).join('');
 
-  // Restore textarea heights
   document.querySelectorAll('.row-text').forEach(autoResize);
 }
 
@@ -423,7 +423,6 @@ function updatePreview() {
   const m = getMeta();
   let out = '';
 
-  // Header
   if (m.client || m.date) {
     const dateStr = m.date ? formatDate(m.date) : '';
     out += `Shotlist${dateStr ? ' ' + dateStr : ''}${m.client ? ' — ' + m.client : ''}\n`;
@@ -485,10 +484,77 @@ function showToast(msg) {
 }
 
 function clearAll() {
-  if (!confirm('Nullstille alt?')) return;
   sections = [];
+  document.getElementById('metaClient').value = '';
+  document.getElementById('metaDate').value = '';
+  document.getElementById('metaCrew').value = '';
+  meta = { client: '', date: '', crew: '' };
   renderAll();
   save();
+  showToast('Nullstilt');
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────────────────
+function exportShot() {
+  if (!sections.length) { showToast('Ingen shotlist å eksportere'); return; }
+  const m = getMeta();
+  const payload = {
+    _app: 'sw-shotlist',
+    _version: 1,
+    exportedAt: new Date().toISOString(),
+    meta: m,
+    sections,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  const clientStr = (m.client || 'Prosjekt').replace(/\s+/g, '-');
+  let datePart = '';
+  if (m.date) {
+    const [y, mo, d] = m.date.split('-');
+    datePart = `-${d}-${mo}-${y.slice(2)}`;
+  }
+  a.href = url;
+  a.download = `${clientStr}${datePart}.swshot`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`✓ Eksportert: ${a.download}`);
+}
+
+// ── IMPORT ─────────────────────────────────────────────────────────────────
+function importShot() {
+  document.getElementById('importFileInput').click();
+}
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed._app !== 'sw-shotlist') {
+        showToast('✕ Ugyldig fil — ikke en Studio Wallin shotlist');
+        return;
+      }
+      sections = parsed.sections || [];
+      const m = parsed.meta || {};
+      document.getElementById('metaClient').value = m.client || '';
+      document.getElementById('metaDate').value = m.date || '';
+      document.getElementById('metaCrew').value = m.crew || '';
+      meta = m;
+      renderAll();
+      save();
+      showToast(`✓ Lastet inn: ${m.client || 'Ukjent'}`);
+    } catch {
+      showToast('✕ Kunne ikke lese filen');
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ── SECTION DRAG & DROP ────────────────────────────────────────────────────
@@ -501,8 +567,8 @@ function sdDrop(e) {
   const si = sections.findIndex(s => s.id === parseFloat(dragSrc.dataset.id));
   const ti = sections.findIndex(s => s.id === parseFloat(target.dataset.id));
   if (si < 0 || ti < 0) return;
-  const [m] = sections.splice(si, 1);
-  sections.splice(ti, 0, m);
+  const [moved] = sections.splice(si, 1);
+  sections.splice(ti, 0, moved);
   renderAll();
   save();
 }
@@ -642,7 +708,6 @@ const templates = {
       { type: 'shot', text: 'Hero shot — logo synlig' },
     ]},
   ],
-
   podcast: [
     { name: 'Rigg / Pre-show', rows: [
       { type: 'note', text: 'Sjekk lys, mikrofoner og bakgrunn' },
@@ -672,7 +737,6 @@ const templates = {
       { type: 'quote', text: 'Avslutningssitat / call to action' },
     ]},
   ],
-
   testimonial: [
     { name: 'Åpning / Etablering', rows: [
       { type: 'shot', text: 'Wide — kunde i sitt miljø' },
@@ -700,7 +764,6 @@ const templates = {
       { type: 'shot', text: 'Wide — naturlig avslutning i miljø' },
     ]},
   ],
-
   bts: [
     { name: 'Ankomst / Rigg', rows: [
       { type: 'shot', text: 'Wide — teamet ankommer lokasjon' },
@@ -725,7 +788,6 @@ const templates = {
       { type: 'note', text: 'Speil en ansatt til kort avsluttende intervju' },
     ]},
   ],
-
   brand: [
     { name: 'Identitet / Åpning', rows: [
       { type: 'shot', text: 'Drone — lokasjon/bedrift ovenfra' },
@@ -757,7 +819,6 @@ const templates = {
       { type: 'note', text: 'Sluttkort: logo + tagline + kontakt' },
     ]},
   ],
-
 };
 
 function loadTemplate(key) {
@@ -768,13 +829,6 @@ function loadTemplate(key) {
   renderAll();
   save();
   showToast(`Mal lastet: ${key}`);
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
-  });
 }
 </script>
 </body>
