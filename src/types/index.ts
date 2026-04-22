@@ -34,6 +34,7 @@ export interface Project {
 export type AccentColor = "blue" | "purple" | "teal" | "orange" | "rose";
 export type FontSize = "small" | "medium" | "large";
 export type Theme = "dark" | "light" | "system";
+export type StorageMode = "local" | "cloud";
 
 export interface AppSettings {
   theme: Theme;
@@ -41,6 +42,8 @@ export interface AppSettings {
   fontSize: FontSize;
   compact: boolean;
   windowOpacity: number;
+  /** Desktop only — whether to sync projects to Firestore */
+  storageMode: StorageMode;
 }
 
 export const SECTION_COLORS = [
@@ -68,4 +71,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontSize: "medium",
   compact: false,
   windowOpacity: 100,
+  storageMode: "local",
 };

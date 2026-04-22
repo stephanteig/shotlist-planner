@@ -4,3 +4,7 @@ src-tauri/target/
 icon-source.png
 .DS_Store
 **/.DS_Store
+
+# Local env (Firebase secrets — never commit)
+.env.local
+.env.*.local

@@ -1,5 +1,5 @@
 import { Minus, Square, X, Clapperboard } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 interface TitlebarProps {
   title?: string;
@@ -53,28 +53,29 @@ export function Titlebar({ title }: TitlebarProps) {
         ))}
       </div>
 
-      {/* Right — window controls */}
-      <div className="flex items-center gap-0.5">
-        <button
-          onClick={handleMinimize}
-          className={cn(
-            "h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          )}
-        >
-          <Minus className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={handleMaximize}
-          className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Square className="h-3 w-3" />
-        </button>
-        <button
-          onClick={handleClose}
-          className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-500/20 hover:text-red-400 text-muted-foreground transition-colors"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+      {/* Right — user menu + window controls */}
+      <div className="flex items-center gap-2">
+        <UserMenu />
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={handleMinimize}
+            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Minus className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={handleMaximize}
+            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Square className="h-3 w-3" />
+          </button>
+          <button
+            onClick={handleClose}
+            className="h-7 w-7 flex items-center justify-center rounded hover:bg-red-500/20 hover:text-red-400 text-muted-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );

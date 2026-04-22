@@ -1,15 +1,16 @@
-import { Monitor, Moon, Sun, Check } from "lucide-react";
+import { Monitor, Moon, Sun, Check, Cloud, HardDrive, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useAuthStore } from "@/store/authStore";
 import { ACCENT_COLORS } from "@/types";
 import type { Theme, FontSize, AccentColor } from "@/types";
 import { cn } from "@/lib/utils";
+import { isTauri } from "@/lib/platform";
+import { firebaseEnabled } from "@/lib/firebase";
 
 const THEMES: Array<{ value: Theme; label: string; icon: any }> = [
   { value: "dark", label: "Dark", icon: Moon },
@@ -36,10 +37,11 @@ function SettingRow({ label, description, children }: { label: string; descripti
 }
 
 export function Settings() {
-  const {
-    settings,
-    setTheme, setAccentColor, setFontSize, setCompact, setWindowOpacity,
-  } = useSettingsStore();
+  const { settings, setTheme, setAccentColor, setFontSize, setCompact, setWindowOpacity, setStorageMode } = useSettingsStore();
+  const { user, signInWithGoogle, signOut } = useAuthStore();
+  const isDesktop = isTauri();
+
+  const cloudEnabled = settings.storageMode === "cloud";
 
   return (
     <ScrollArea className="h-full">
@@ -49,6 +51,86 @@ export function Settings() {
           <p className="text-sm text-muted-foreground mt-1">Tilpass Markr etter dine preferanser</p>
         </div>
 
+        {/* Account */}
+        {firebaseEnabled && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Konto</CardTitle>
+              <CardDescription>Google-konto og synkronisering</CardDescription>
+            </CardHeader>
+            <CardContent className="divide-y divide-border space-y-0">
+              {user ? (
+                <SettingRow
+                  label={user.displayName ?? user.email ?? "Innlogget"}
+                  description={user.email ?? undefined}
+                >
+                  <Button variant="outline" size="sm" onClick={signOut}>
+                    Logg ut
+                  </Button>
+                </SettingRow>
+              ) : (
+                <SettingRow label="Ikke innlogget" description="Logg inn med Google for å aktivere cloud sync">
+                  <Button size="sm" onClick={signInWithGoogle} className="gap-1.5">
+                    <LogIn className="h-3.5 w-3.5" />
+                    Logg inn med Google
+                  </Button>
+                </SettingRow>
+              )}
+
+              {/* Storage mode toggle — desktop only */}
+              {isDesktop && (
+                <SettingRow
+                  label="Lagring"
+                  description={
+                    cloudEnabled
+                      ? "Prosjekter synkroniseres til skyen og lagres lokalt"
+                      : "Prosjekter lagres kun lokalt på denne maskinen"
+                  }
+                >
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setStorageMode("local")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
+                        !cloudEnabled
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <HardDrive className="h-3.5 w-3.5" />
+                      Lokal
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!user) { signInWithGoogle(); return; }
+                        setStorageMode("cloud");
+                      }}
+                      disabled={!user}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
+                        cloudEnabled
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                      )}
+                    >
+                      <Cloud className="h-3.5 w-3.5" />
+                      Cloud
+                    </button>
+                  </div>
+                </SettingRow>
+              )}
+
+              {!isDesktop && user && (
+                <SettingRow label="Cloud sync" description="Alle prosjekter synkroniseres automatisk til skyen">
+                  <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                    <Cloud className="h-3.5 w-3.5" /> Aktiv
+                  </span>
+                </SettingRow>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Appearance */}
         <Card>
           <CardHeader>
@@ -56,7 +138,6 @@ export function Settings() {
             <CardDescription>Juster utseende, farger og typografi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-0 divide-y divide-border">
-            {/* Theme */}
             <SettingRow label="Tema" description="Velg lyst, mørkt eller la systemet bestemme">
               <div className="flex gap-1.5">
                 {THEMES.map(({ value, label, icon: Icon }) => (
@@ -77,7 +158,6 @@ export function Settings() {
               </div>
             </SettingRow>
 
-            {/* Accent color */}
             <SettingRow label="Aksentfarge" description="Velg en primærfarge for knapper og aktive tilstander">
               <div className="flex gap-2">
                 {(Object.entries(ACCENT_COLORS) as Array<[AccentColor, { label: string; hex: string }]>).map(([key, { label, hex }]) => (
@@ -99,7 +179,6 @@ export function Settings() {
               </div>
             </SettingRow>
 
-            {/* Font size */}
             <SettingRow label="Tekststørrelse" description="Justerer skriftstørrelsen i hele appen">
               <div className="flex gap-1.5">
                 {FONT_SIZES.map(({ value, label, description }) => (
@@ -120,29 +199,20 @@ export function Settings() {
               </div>
             </SettingRow>
 
-            {/* Compact mode */}
             <SettingRow label="Kompakt modus" description="Reduserer padding og mellomrom i hele appen">
-              <Switch
-                checked={settings.compact}
-                onCheckedChange={setCompact}
-              />
+              <Switch checked={settings.compact} onCheckedChange={setCompact} />
             </SettingRow>
 
-            {/* Window opacity */}
-            <SettingRow
-              label="Vindusgjennomsiktighet"
-              description={`${settings.windowOpacity}% — juster om du vil se innhold gjennom vinduet`}
-            >
-              <div className="w-40">
-                <Slider
-                  min={70}
-                  max={100}
-                  step={1}
-                  value={[settings.windowOpacity]}
-                  onValueChange={([v]) => setWindowOpacity(v)}
-                />
-              </div>
-            </SettingRow>
+            {isDesktop && (
+              <SettingRow
+                label="Vindusgjennomsiktighet"
+                description={`${settings.windowOpacity}%`}
+              >
+                <div className="w-40">
+                  <Slider min={70} max={100} step={1} value={[settings.windowOpacity]} onValueChange={([v]) => setWindowOpacity(v)} />
+                </div>
+              </SettingRow>
+            )}
           </CardContent>
         </Card>
 
@@ -153,21 +223,17 @@ export function Settings() {
             <CardDescription>Versjonsinformasjon og snarveier</CardDescription>
           </CardHeader>
           <CardContent className="divide-y divide-border space-y-0">
-            <SettingRow label="Versjon" description="Aktuell appversjon">
-              <span className="text-sm font-mono text-muted-foreground">0.1.0</span>
-            </SettingRow>
-            <SettingRow label="Databeskyttelse" description="All data lagres lokalt på din maskin">
-              <span className="text-xs text-emerald-400 font-medium">Kun lokal lagring</span>
+            <SettingRow label="Versjon"><span className="text-sm font-mono text-muted-foreground">0.1.0</span></SettingRow>
+            <SettingRow label="Databeskyttelse" description="All data lagres lokalt — cloud sync kun når aktivert">
+              <span className="text-xs text-emerald-400 font-medium">Privat</span>
             </SettingRow>
             <SettingRow label="Tastatursnarveier" description="Hurtigtaster">
               <div className="flex flex-col gap-1 text-right">
                 <span className="text-xs text-muted-foreground">
-                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">F</kbd>{" "}
-                  Forhåndsvisning
+                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">F</kbd> Forhåndsvisning
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">Enter</kbd>{" "}
-                  Ny rad
+                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">Enter</kbd> Ny rad
                 </span>
               </div>
             </SettingRow>
@@ -190,10 +256,7 @@ export function Settings() {
                 variant="outline"
                 size="sm"
                 className="border-destructive/40 text-destructive hover:bg-destructive/10"
-                onClick={() => {
-                  localStorage.removeItem("markr-settings");
-                  window.location.reload();
-                }}
+                onClick={() => { localStorage.removeItem("markr-settings"); window.location.reload(); }}
               >
                 Nullstill
               </Button>
