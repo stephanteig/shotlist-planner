@@ -5,173 +5,347 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shotlist Planner — Studio Wallin</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#06060f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Shotlist">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root {
-  --bg: #080808; --surface: #0f0f0f; --surface2: #141414;
-  --border: #1e1e1e; --border2: #2a2a2a;
-  --text: #e8e8e8; --text-dim: #555; --text-mid: #888;
-  --accent: #f0f0f0; --green: #22c55e; --green-bg: #0d2a1a; --green-border: #1e4a2e;
-  --mono: 'DM Mono', monospace; --sans: 'Syne', sans-serif;
+  --bg:#06060f; --s1:rgba(255,255,255,.025); --s2:rgba(255,255,255,.04);
+  --s3:rgba(255,255,255,.07); --b1:rgba(255,255,255,.06); --b2:rgba(255,255,255,.11);
+  --text:#e2e2f0; --dim:#35355a; --mid:#6060a0;
+  --accent:#7c6af7; --accent2:#a78bfa; --glow:rgba(124,106,247,.22);
+  --green:#34d399; --gdim:rgba(52,211,153,.12); --gborder:rgba(52,211,153,.28);
+  --blue:#60a5fa; --amber:#fbbf24; --red:#f87171; --pink:#f472b6;
+  --mono:'DM Mono',monospace; --sans:'Syne',sans-serif; --body:'Inter',sans-serif;
+  --r:12px;
 }
-html, body { height: 100%; }
-body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
 
-header {
-  padding: 18px 28px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex;flex-direction:column;min-height:100vh}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 18% -8%,rgba(124,106,247,.11) 0%,transparent 55%),
+    radial-gradient(ellipse 55% 40% at 88% 108%,rgba(52,211,153,.06) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 30% at 60% 50%,rgba(124,106,247,.03) 0%,transparent 60%);
 }
-.header-left .label { font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 3px; font-family: var(--mono); }
-.header-left h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
-.header-right { display: flex; gap: 8px; align-items: center; }
 
-.btn { border: 1px solid var(--border2); border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
-.btn-primary { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
-.btn-primary:hover { background: #d0d0d0; }
-.btn-ghost { background: var(--surface2); color: var(--text-mid); }
-.btn-ghost:hover { color: var(--text); background: #1e1e1e; }
-.btn-danger { background: transparent; color: #555; border-color: transparent; font-size: 11px; }
-.btn-danger:hover { color: #f87171; }
-
-.app { display: grid; grid-template-columns: 1fr 360px; flex: 1; overflow: hidden; min-height: 0; }
-
-/* EDITOR */
-.editor { padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-
-/* PROJECT META */
-.project-meta {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+/* ── HEADER ── */
+header{
+  position:relative;z-index:100;padding:12px 22px;
+  border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  backdrop-filter:blur(24px);background:rgba(6,6,15,.8);
 }
-.meta-field label { display: block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); font-weight: 500; margin-bottom: 4px; }
-.meta-field input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border2); color: var(--text); font-size: 13px; font-family: var(--mono); outline: none; padding: 3px 0; }
-.meta-field input::placeholder { color: var(--text-dim); }
-
-/* TEMPLATES BAR */
-.template-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.template-bar .label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-family: var(--mono); font-weight: 500; }
-.btn-tpl { background: transparent; border: 1px solid var(--border); border-radius: 5px; padding: 5px 12px; font-size: 11px; font-weight: 600; font-family: var(--sans); color: var(--text-mid); cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; }
-.btn-tpl:hover { border-color: var(--border2); color: var(--text); }
-
-/* SECTIONS */
-.sections { display: flex; flex-direction: column; gap: 14px; }
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: var(--mono); font-size: 12px; border: 1px dashed var(--border); border-radius: 10px; }
-
-.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.section-header {
-  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
-  border-bottom: 1px solid var(--border); background: var(--surface2);
-  cursor: grab;
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  box-shadow:0 0 18px var(--glow);
 }
-.section-header:active { cursor: grabbing; }
-.section-grip { color: var(--text-dim); font-size: 14px; user-select: none; }
-.section-name-input {
-  flex: 1; background: transparent; border: none; color: var(--accent);
-  font-size: 12px; font-weight: 700; font-family: var(--sans); letter-spacing: 0.1em;
-  text-transform: uppercase; outline: none;
+.brand-label{font-size:9px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;font-family:var(--mono);line-height:1}
+.brand-name{font-size:16px;font-weight:800;letter-spacing:-.02em;font-family:var(--sans);line-height:1.15}
+.hdr-right{display:flex;gap:5px;align-items:center}
+.vline{width:1px;height:20px;background:var(--b1);margin:0 3px}
+
+/* ── BUTTONS ── */
+.btn{
+  border-radius:8px;padding:6px 13px;font-size:11.5px;font-weight:600;
+  letter-spacing:.02em;cursor:pointer;font-family:var(--body);
+  transition:all .15s;border:1px solid transparent;outline:none;
 }
-.section-name-input::placeholder { color: var(--text-dim); }
-.section-count { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
-.delete-sec { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; line-height: 1; padding: 0; transition: color 0.12s; }
-.delete-sec:hover { color: #f87171; }
-
-.section-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
-
-/* ROWS */
-.row-item { display: flex; align-items: flex-start; gap: 10px; padding: 5px 6px; border-radius: 6px; transition: background 0.1s; }
-.row-item:hover { background: #111; }
-.row-item:hover .row-actions { opacity: 1 !important; }
-
-.row-type-dot {
-  width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0;
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;box-shadow:0 0 0 0 var(--glow);
 }
-.dot-shot { background: #4ade80; }
-.dot-note { background: #60a5fa; }
-.dot-quote { background: #f59e0b; }
-
-.row-checkbox { width: 14px; height: 14px; border: 1px solid var(--border2); border-radius: 3px; margin-top: 4px; flex-shrink: 0; cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; }
-.row-checkbox.checked { background: var(--green); border-color: var(--green); }
-.row-checkbox.checked::after { content: '✓'; color: white; font-size: 9px; }
-
-.row-text {
-  flex: 1; background: transparent; border: none; color: var(--text); font-size: 13px;
-  font-family: var(--mono); outline: none; resize: none; line-height: 1.5; padding: 0;
-  min-height: 20px; overflow: hidden;
+.btn-primary:hover{box-shadow:0 0 22px var(--glow);transform:translateY(-1px)}
+.btn-ghost{background:var(--s2);color:var(--mid);border-color:var(--b1)}
+.btn-ghost:hover{color:var(--text);background:var(--s3);border-color:var(--b2)}
+.btn-icon{
+  background:var(--s2);color:var(--mid);border:1px solid var(--b1);
+  border-radius:8px;padding:6px 9px;cursor:pointer;font-size:13px;
+  transition:all .15s;line-height:1;display:flex;align-items:center;
 }
-.row-text::placeholder { color: var(--text-dim); }
-.row-text.quote-style { color: #f59e0b; font-style: italic; }
-.row-text.note-style { color: #9ca3af; font-size: 12px; }
+.btn-icon:hover{color:var(--text);background:var(--s3)}
+.btn-icon.on{background:rgba(124,106,247,.15);color:var(--accent);border-color:rgba(124,106,247,.35)}
 
-.row-actions { opacity: 0; display: flex; gap: 4px; align-items: center; transition: opacity 0.15s; margin-top: 2px; }
-.row-actions button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 2px 4px; border-radius: 3px; font-family: var(--mono); transition: color 0.12s; }
-.row-actions button:hover { color: var(--text); }
+/* ── LAYOUT ── */
+.app{
+  display:grid;grid-template-columns:1fr 330px;
+  flex:1;overflow:hidden;min-height:0;position:relative;z-index:1;
+  transition:grid-template-columns .3s ease;
+}
+.app.focused{grid-template-columns:1fr 0}
+.app.focused .sidebar{opacity:0;pointer-events:none}
 
-/* ADD ROW BUTTONS */
-.add-row-bar { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-.btn-row { background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; font-family: var(--mono); cursor: pointer; transition: all 0.12s; letter-spacing: 0.03em; }
-.btn-row.shot { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-.btn-row.shot:hover { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.4); }
-.btn-row.note { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
-.btn-row.note:hover { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.4); }
-.btn-row.quote { color: #f59e0b; border-color: rgba(245,158,11,0.2); }
-.btn-row.quote:hover { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.4); }
+/* ── EDITOR ── */
+.editor{padding:18px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
 
-.add-section-btn { background: transparent; border: 1px dashed var(--border2); border-radius: 8px; padding: 12px; font-size: 12px; font-family: var(--mono); color: var(--text-dim); cursor: pointer; transition: all 0.15s; width: 100%; text-align: center; letter-spacing: 0.05em; }
-.add-section-btn:hover { border-color: var(--border2); color: var(--text-mid); background: var(--surface); }
+/* ── META ── */
+.project-meta{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:13px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;
+}
+.meta-field label{
+  display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);font-family:var(--mono);font-weight:500;margin-bottom:5px;
+}
+.meta-field input{
+  width:100%;background:transparent;border:none;border-bottom:1px solid var(--b2);
+  color:var(--text);font-size:13px;font-family:var(--mono);outline:none;
+  padding:3px 0;transition:border-color .15s;
+}
+.meta-field input:focus{border-bottom-color:var(--accent)}
+.meta-field input::placeholder{color:var(--dim)}
 
-/* SIDEBAR */
-.sidebar { border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.sidebar-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.sidebar-header .label { font-size: 10px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; font-family: var(--mono); }
-.stats { font-size: 11px; font-family: var(--mono); color: var(--text-dim); }
-.preview-wrap { flex: 1; overflow-y: auto; padding: 14px 18px; }
-pre#preview { font-family: var(--mono); font-size: 11.5px; line-height: 1.85; color: #aaa; white-space: pre-wrap; word-break: break-word; }
-.preview-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: var(--mono); font-size: 12px; }
+/* ── TEMPLATE BAR ── */
+.tpl-bar{display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.tpl-bar::-webkit-scrollbar{display:none}
+.tpl-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-family:var(--mono);white-space:nowrap;flex-shrink:0}
+.btn-tpl{
+  background:var(--s1);border:1px solid var(--b1);border-radius:20px;
+  padding:4px 11px;font-size:10.5px;font-weight:600;font-family:var(--body);
+  color:var(--mid);cursor:pointer;transition:all .12s;white-space:nowrap;flex-shrink:0;
+}
+.btn-tpl:hover{border-color:var(--accent);color:var(--accent2);background:rgba(124,106,247,.08)}
 
-.btn-copy { background: var(--green-bg); color: var(--green); border: none; border-top: 1px solid var(--green-border); width: 100%; padding: 13px; font-size: 12px; font-weight: 700; font-family: var(--sans); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; flex-shrink: 0; }
-.btn-copy:hover { background: #0f3a20; }
-.btn-copy.copied { color: #4ade80; background: #0a2a14; }
+/* ── SECTIONS ── */
+.sections{display:flex;flex-direction:column;gap:11px}
+.empty-state{
+  text-align:center;padding:56px 20px;color:var(--dim);
+  font-family:var(--mono);font-size:11px;line-height:1.7;
+  border:1px dashed rgba(255,255,255,.06);border-radius:var(--r);
+  background:var(--s1);
+}
+.empty-icon{font-size:28px;margin-bottom:10px;opacity:.4}
 
-.status-bar { padding: 7px 18px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+.section-card{
+  background:var(--s1);
+  border:1px solid var(--b1);
+  border-left:3px solid var(--sc,var(--accent));
+  border-radius:var(--r);overflow:hidden;
+  transition:box-shadow .2s,border-color .2s;
+}
+.section-card:hover{
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 6px 28px rgba(0,0,0,.35);
+}
+.section-card.drag-over{
+  border-color:var(--sc,var(--accent));
+  box-shadow:0 0 0 1px var(--sc,var(--accent)),0 0 24px rgba(124,106,247,.18);
+}
+.section-card.dragging{opacity:.4}
 
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 10px 18px; border-radius: 7px; font-family: var(--mono); font-size: 11px; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 9999; }
-.toast.show { opacity: 1; transform: translateY(0); }
+.sec-hdr{
+  display:flex;align-items:center;gap:8px;padding:10px 13px;
+  background:rgba(255,255,255,.018);border-bottom:1px solid var(--b1);
+}
+.section-card.collapsed .sec-hdr{border-bottom:none}
+.grip{color:var(--dim);font-size:11px;cursor:grab;flex-shrink:0;padding:2px;transition:color .12s;line-height:1}
+.grip:hover{color:var(--mid)}
+.grip:active{cursor:grabbing}
 
-::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.color-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--sc,var(--accent));
+  flex-shrink:0;cursor:pointer;transition:transform .15s;
+  box-shadow:0 0 8px var(--sc,var(--accent));
+}
+.color-dot:hover{transform:scale(1.6)}
 
-@media (max-width: 900px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar { border-left: none; border-top: 1px solid var(--border); max-height: 380px; }
-  .project-meta { grid-template-columns: 1fr 1fr; }
+.sec-name{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-size:10.5px;font-weight:700;font-family:var(--sans);
+  letter-spacing:.1em;text-transform:uppercase;outline:none;min-width:0;
+}
+.sec-name::placeholder{color:var(--dim)}
+
+.sec-badge{
+  font-family:var(--mono);font-size:9px;background:var(--s3);
+  color:var(--mid);padding:2px 7px;border-radius:20px;flex-shrink:0;
+}
+.sec-actions{display:flex;gap:2px;align-items:center;flex-shrink:0}
+.sec-btn{
+  background:none;border:none;cursor:pointer;padding:3px 6px;
+  border-radius:5px;font-size:11px;color:var(--dim);line-height:1;
+  transition:all .12s;font-family:var(--mono);
+}
+.sec-btn:hover{color:var(--text);background:var(--s3)}
+.sec-btn.del:hover{color:var(--red)}
+
+.sec-body{padding:8px 13px 12px;display:flex;flex-direction:column;gap:3px}
+.section-card.collapsed .sec-body{display:none}
+
+/* ── ROWS ── */
+.row-item{display:flex;align-items:flex-start;gap:7px;padding:4px 6px;border-radius:7px;transition:background .1s}
+.row-item:hover{background:rgba(255,255,255,.028)}
+.row-item:hover .row-actions{opacity:1}
+
+.shot-num{
+  font-family:var(--mono);font-size:9px;color:var(--dim);
+  margin-top:5px;flex-shrink:0;width:18px;text-align:right;
+}
+
+.type-pill{
+  font-size:8px;font-weight:700;letter-spacing:.07em;
+  padding:2px 5px;border-radius:4px;font-family:var(--mono);
+  flex-shrink:0;margin-top:4px;white-space:nowrap;
+}
+.pill-shot{background:rgba(52,211,153,.1);color:var(--green)}
+.pill-note{background:rgba(96,165,250,.1);color:var(--blue)}
+.pill-quote{background:rgba(251,191,36,.1);color:var(--amber)}
+
+.row-cb{
+  width:13px;height:13px;border:1px solid rgba(255,255,255,.13);
+  border-radius:3px;margin-top:4px;flex-shrink:0;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;
+}
+.row-cb.on{background:var(--green);border-color:var(--green);box-shadow:0 0 7px rgba(52,211,153,.35)}
+.row-cb.on::after{content:'✓';color:#04100a;font-size:8px;font-weight:700}
+
+.row-text{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-size:12.5px;font-family:var(--mono);outline:none;resize:none;
+  line-height:1.55;padding:0;min-height:20px;overflow:hidden;
+}
+.row-text::placeholder{color:var(--dim)}
+.row-text.qt{color:var(--amber);font-style:italic}
+.row-text.nt{color:#6878b8;font-size:12px}
+.row-item.done .row-text{text-decoration:line-through;opacity:.4}
+
+.row-actions{opacity:0;display:flex;gap:2px;margin-top:3px;transition:opacity .12s}
+.row-actions button{
+  background:none;border:none;color:var(--dim);cursor:pointer;
+  font-size:11px;padding:2px 5px;border-radius:4px;transition:all .12s;
+}
+.row-actions button:hover{color:var(--red);background:rgba(248,113,113,.08)}
+
+/* ── ADD ROW ── */
+.add-row-bar{display:flex;gap:5px;margin-top:6px;padding-top:8px;border-top:1px solid var(--b1)}
+.btn-row{
+  background:transparent;border:1px solid transparent;border-radius:5px;
+  padding:3px 9px;font-size:9.5px;font-weight:600;font-family:var(--mono);
+  cursor:pointer;transition:all .12s;letter-spacing:.05em;
+}
+.btn-row.sh{color:var(--green);border-color:rgba(52,211,153,.2)}
+.btn-row.sh:hover{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.4)}
+.btn-row.nt{color:var(--blue);border-color:rgba(96,165,250,.2)}
+.btn-row.nt:hover{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.4)}
+.btn-row.qt{color:var(--amber);border-color:rgba(251,191,36,.2)}
+.btn-row.qt:hover{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.4)}
+
+.add-sec-btn{
+  background:transparent;border:1px dashed rgba(255,255,255,.07);
+  border-radius:var(--r);padding:12px;font-size:11px;font-family:var(--mono);
+  color:var(--dim);cursor:pointer;transition:all .15s;width:100%;text-align:center;letter-spacing:.06em;
+}
+.add-sec-btn:hover{border-color:var(--accent);color:var(--accent2);background:rgba(124,106,247,.05)}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  border-left:1px solid var(--b1);display:flex;flex-direction:column;
+  overflow:hidden;background:rgba(4,4,18,.7);backdrop-filter:blur(12px);
+  transition:opacity .25s;
+}
+.sb-hdr{padding:13px 15px 11px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.sb-title{font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;font-family:var(--mono);margin-bottom:10px}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.stat-card{background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:8px 10px}
+.stat-val{font-size:20px;font-weight:800;font-family:var(--sans);line-height:1;margin-bottom:1px}
+.stat-lbl{font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-family:var(--mono)}
+.stat-card.v{} .stat-card.v .stat-val{color:var(--accent2)}
+.stat-card.g .stat-val{color:var(--green)}
+
+.prog-label{display:flex;justify-content:space-between;font-size:9.5px;font-family:var(--mono);color:var(--mid);margin-bottom:5px}
+.prog-track{height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
+.prog-fill{
+  height:100%;background:linear-gradient(90deg,var(--green),rgba(52,211,153,.5));
+  border-radius:2px;transition:width .35s ease;
+  box-shadow:0 0 8px rgba(52,211,153,.4);
+}
+
+.preview-wrap{flex:1;overflow-y:auto;padding:12px 15px}
+pre#preview{font-family:var(--mono);font-size:10.5px;line-height:1.85;color:#565690;white-space:pre-wrap;word-break:break-word}
+.prev-empty{text-align:center;padding:40px 16px;color:var(--dim);font-family:var(--mono);font-size:10.5px;line-height:1.7}
+
+.btn-copy{
+  background:var(--gdim);color:var(--green);border:none;
+  border-top:1px solid var(--gborder);width:100%;padding:12px;
+  font-size:11px;font-weight:700;font-family:var(--body);cursor:pointer;
+  letter-spacing:.06em;transition:all .15s;flex-shrink:0;
+}
+.btn-copy:hover{background:rgba(52,211,153,.18)}
+.btn-copy.ok{color:#34d399}
+
+.status-bar{
+  padding:5px 15px;border-top:1px solid var(--b1);font-family:var(--mono);
+  font-size:9px;color:var(--dim);flex-shrink:0;display:flex;align-items:center;gap:6px;
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--dim);transition:all .3s;flex-shrink:0}
+.sdot.saving{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:blink .7s ease infinite}
+.sdot.saved{background:var(--green);box-shadow:0 0 6px rgba(52,211,153,.5)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:18px;right:18px;
+  background:#0d0d20;color:var(--text);border:1px solid var(--b2);
+  padding:9px 15px;border-radius:9px;font-family:var(--mono);font-size:10.5px;
+  opacity:0;transform:translateY(5px) scale(.97);
+  transition:all .2s;pointer-events:none;z-index:9999;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateY(0) scale(1)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{border-left:none;border-top:1px solid var(--b1);max-height:340px}
+  .project-meta{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:520px){
+  header{padding:10px 14px}
+  .editor{padding:14px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .brand-label{display:none}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-left">
-    <div class="label">Studio Wallin</div>
-    <h1>Shotlist Planner</h1>
+  <div class="brand">
+    <div class="brand-mark">🎬</div>
+    <div>
+      <div class="brand-label">Studio Wallin</div>
+      <div class="brand-name">Shotlist Planner</div>
+    </div>
   </div>
-  <div class="header-right">
+  <div class="hdr-right">
+    <button class="btn-icon" id="focusBtn" onclick="toggleFocus()" title="Fokus-modus (F)">⊞</button>
+    <div class="vline"></div>
+    <button class="btn btn-ghost" onclick="importShot()">↑ Importer</button>
+    <button class="btn btn-ghost" onclick="exportShot()">↓ Eksporter</button>
     <button class="btn btn-ghost" onclick="clearAll()">Nullstill</button>
-    <button class="btn btn-ghost" onclick="importShot()" title="Importer .swshot-fil">↑ Importer</button>
-    <button class="btn btn-ghost" onclick="exportShot()" title="Eksporter som .swshot-fil">↓ Eksporter</button>
     <button class="btn btn-primary" onclick="addSection()">+ Seksjon</button>
   </div>
 </header>
 <input type="file" id="importFileInput" accept=".swshot,.json" style="display:none" onchange="handleImportFile(event)">
 
-<div class="app">
+<div class="app" id="app">
   <div class="editor" id="editor">
 
-    <!-- PROJECT META -->
     <div class="project-meta">
       <div class="meta-field">
         <label>Prosjekt / Kunde</label>
@@ -187,9 +361,8 @@ pre#preview { font-family: var(--mono); font-size: 11.5px; line-height: 1.85; co
       </div>
     </div>
 
-    <!-- TEMPLATES -->
-    <div class="template-bar">
-      <span class="label">Mal:</span>
+    <div class="tpl-bar">
+      <span class="tpl-label">Mal:</span>
       <button class="btn-tpl" onclick="loadTemplate('bolig')">Boligsalg</button>
       <button class="btn-tpl" onclick="loadTemplate('intervju')">Intervju</button>
       <button class="btn-tpl" onclick="loadTemplate('social')">SoMe</button>
@@ -201,49 +374,93 @@ pre#preview { font-family: var(--mono); font-size: 11.5px; line-height: 1.85; co
       <button class="btn-tpl" onclick="loadTemplate('brand')">Brand film</button>
     </div>
 
-    <!-- SECTIONS -->
     <div class="sections" id="sections">
-      <div class="empty-state">Klikk «+ Seksjon» eller velg en mal for å starte</div>
+      <div class="empty-state">
+        <div class="empty-icon">🎬</div>
+        Klikk «+ Seksjon» eller velg en mal for å starte
+      </div>
     </div>
 
-    <button class="add-section-btn" onclick="addSection()">+ Legg til seksjon</button>
+    <button class="add-sec-btn" onclick="addSection()">+ Legg til seksjon</button>
 
   </div>
 
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <span class="label">Milanote-forhåndsvisning</span>
-      <span class="stats" id="stats">0 shots</span>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-hdr">
+      <div class="sb-title">Oversikt</div>
+      <div class="stats-grid">
+        <div class="stat-card v">
+          <div class="stat-val" id="stShots">0</div>
+          <div class="stat-lbl">Shots</div>
+        </div>
+        <div class="stat-card g">
+          <div class="stat-val" id="stDone">0</div>
+          <div class="stat-lbl">Ferdig</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stSecs">0</div>
+          <div class="stat-lbl">Seksjoner</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stTime">—</div>
+          <div class="stat-lbl">Est. tid</div>
+        </div>
+      </div>
+      <div class="prog-label">
+        <span>Fremgang</span>
+        <span id="progTxt">0 / 0</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="progFill" style="width:0%"></div>
+      </div>
     </div>
     <div class="preview-wrap">
-      <pre id="preview"><div class="preview-empty">Formattert shotlist vises her...</div></pre>
+      <pre id="preview"><div class="prev-empty">Formattert shotlist\nvises her...</div></pre>
     </div>
     <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">Kopier til Milanote</button>
-    <div class="status-bar" id="statusBar">Klar</div>
+    <div class="status-bar">
+      <div class="sdot" id="sdot"></div>
+      <span id="statusBar">Klar</span>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── STATE ──────────────────────────────────────────────────────────────────
+// ── STATE ──
 let sections = [];
-let meta = { client: '', date: '', crew: '' };
+let meta = { client:'', date:'', crew:'' };
 let dragSrc = null;
+let focusMode = false;
+let saveTimer;
 
-// ── INIT ───────────────────────────────────────────────────────────────────
+const COLORS = ['#7c6af7','#34d399','#60a5fa','#fbbf24','#f87171','#f472b6','#2dd4bf','#a78bfa'];
+
+// ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('sw-shotlist-v2');
   if (saved) {
-    const d = JSON.parse(saved);
-    sections = d.sections || [];
-    meta = d.meta || {};
-    document.getElementById('metaClient').value = meta.client || '';
-    document.getElementById('metaDate').value = meta.date || '';
-    document.getElementById('metaCrew').value = meta.crew || '';
+    try {
+      const d = JSON.parse(saved);
+      sections = (d.sections || []).map((s, i) => ({
+        collapsed: false,
+        color: COLORS[i % COLORS.length],
+        ...s,
+      }));
+      meta = d.meta || {};
+      document.getElementById('metaClient').value = meta.client || '';
+      document.getElementById('metaDate').value = meta.date || '';
+      document.getElementById('metaCrew').value = meta.crew || '';
+    } catch(e) {}
   }
   renderAll();
+  document.addEventListener('keydown', handleGlobalKey);
 });
+
+function handleGlobalKey(e) {
+  if (e.key === 'f' && !e.target.matches('input,textarea')) toggleFocus();
+}
 
 function getMeta() {
   return {
@@ -256,26 +473,36 @@ function getMeta() {
 function save() {
   meta = getMeta();
   localStorage.setItem('sw-shotlist-v2', JSON.stringify({ sections, meta }));
-  const now = new Date();
-  document.getElementById('statusBar').textContent =
-    `Lagret ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const dot = document.getElementById('sdot');
+  const bar = document.getElementById('statusBar');
+  dot.className = 'sdot saving';
+  bar.textContent = 'Lagrer...';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const now = new Date();
+    dot.className = 'sdot saved';
+    bar.textContent = `Lagret ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    setTimeout(() => { dot.className = 'sdot'; }, 2500);
+  }, 400);
 }
 
-// ── MODELS ─────────────────────────────────────────────────────────────────
-function makeSection(name = '', rows = null) {
+// ── MODELS ──
+function makeSection(name='', rows=null, color=null) {
   return {
     id: Date.now() + Math.random(),
     name,
     rows: rows || [],
+    collapsed: false,
+    color: color || COLORS[sections.length % COLORS.length],
   };
 }
 
-function makeRow(type = 'shot', text = '', checked = false) {
+function makeRow(type='shot', text='', checked=false) {
   return { id: Date.now() + Math.random(), type, text, checked };
 }
 
-// ── SECTIONS ───────────────────────────────────────────────────────────────
-function addSection(name = '') {
+// ── SECTIONS ──
+function addSection(name='') {
   sections.push(makeSection(name));
   renderAll();
   save();
@@ -288,11 +515,25 @@ function deleteSection(id) {
 }
 
 function updateSectionName(id, val) {
-  const sec = sections.find(s => s.id === id);
-  if (sec) { sec.name = val; updatePreview(); save(); }
+  const s = sections.find(s => s.id === id);
+  if (s) { s.name = val; updatePreview(); save(); }
 }
 
-// ── ROWS ───────────────────────────────────────────────────────────────────
+function toggleCollapse(id) {
+  const s = sections.find(s => s.id === id);
+  if (s) { s.collapsed = !s.collapsed; renderSections(); }
+}
+
+function cycleColor(id) {
+  const s = sections.find(s => s.id === id);
+  if (!s) return;
+  const i = COLORS.indexOf(s.color);
+  s.color = COLORS[(i + 1) % COLORS.length];
+  renderAll();
+  save();
+}
+
+// ── ROWS ──
 function addRow(secId, type) {
   const sec = sections.find(s => s.id === secId);
   if (!sec) return;
@@ -301,7 +542,7 @@ function addRow(secId, type) {
   renderAll();
   save();
   requestAnimationFrame(() => {
-    const el = document.getElementById(`row-${row.id}`);
+    const el = document.getElementById(`r-${row.id}`);
     if (el) { el.focus(); autoResize(el); }
   });
 }
@@ -317,14 +558,14 @@ function updateRow(secId, rowId, field, val) {
   const sec = sections.find(s => s.id === secId);
   if (!sec) return;
   const row = sec.rows.find(r => r.id === rowId);
-  if (row) { row[field] = val; updatePreview(); save(); }
+  if (row) { row[field] = val; updatePreview(); updateStats(); save(); }
 }
 
 function toggleCheck(secId, rowId) {
   const sec = sections.find(s => s.id === secId);
   if (!sec) return;
   const row = sec.rows.find(r => r.id === rowId);
-  if (row) { row.checked = !row.checked; updatePreview(); save(); }
+  if (row) { row.checked = !row.checked; updatePreview(); updateStats(); save(); }
 }
 
 function autoResize(el) {
@@ -332,122 +573,149 @@ function autoResize(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
-// ── RENDER ─────────────────────────────────────────────────────────────────
-function renderAll() {
-  renderSections();
-  updatePreview();
-  const shots = sections.reduce((a, s) => a + s.rows.filter(r => r.type === 'shot').length, 0);
-  document.getElementById('stats').textContent = `${shots} shots · ${sections.length} seksjoner`;
-}
-
-function renderSections() {
-  const container = document.getElementById('sections');
-  if (!sections.length) {
-    container.innerHTML = `<div class="empty-state">Klikk «+ Seksjon» eller velg en mal for å starte</div>`;
-    return;
-  }
-
-  container.innerHTML = sections.map(sec => `
-    <div class="section-card" data-id="${sec.id}"
-         draggable="true"
-         ondragstart="sdStart(event)" ondragover="sdOver(event)" ondrop="sdDrop(event)" ondragend="sdEnd(event)">
-      <div class="section-header">
-        <span class="section-grip">⋮⋮</span>
-        <input class="section-name-input" type="text" value="${esc(sec.name)}"
-               placeholder="SEKSJONSOVERSKRIFT"
-               oninput="updateSectionName(${sec.id}, this.value)">
-        <span class="section-count">${sec.rows.filter(r=>r.type==='shot').length} shots</span>
-        <button class="delete-sec" onclick="deleteSection(${sec.id})">×</button>
-      </div>
-      <div class="section-body">
-        ${sec.rows.map(row => renderRow(sec.id, row)).join('')}
-        <div class="add-row-bar">
-          <button class="btn-row shot" onclick="addRow(${sec.id}, 'shot')">+ Shot</button>
-          <button class="btn-row note" onclick="addRow(${sec.id}, 'note')">+ Notat</button>
-          <button class="btn-row quote" onclick="addRow(${sec.id}, 'quote')">+ Sitat</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  document.querySelectorAll('.row-text').forEach(autoResize);
-}
-
-function renderRow(secId, row) {
-  const dotClass = row.type === 'shot' ? 'dot-shot' : row.type === 'quote' ? 'dot-quote' : 'dot-note';
-  const textClass = row.type === 'quote' ? 'quote-style' : row.type === 'note' ? 'note-style' : '';
-  const placeholder = row.type === 'shot' ? 'f.eks. Wide av stue · Clossup detalj' :
-                      row.type === 'quote' ? '"Sitat fra intervjuobjekt..."' :
-                      'Notat / instruksjon...';
-
-  const checkbox = row.type === 'shot'
-    ? `<div class="row-checkbox ${row.checked ? 'checked' : ''}" onclick="toggleCheck(${secId}, ${row.id})"></div>`
-    : `<div style="width:14px;flex-shrink:0"></div>`;
-
-  return `
-    <div class="row-item">
-      <div class="row-type-dot ${dotClass}"></div>
-      ${checkbox}
-      <textarea id="row-${row.id}" class="row-text ${textClass}"
-                rows="1"
-                placeholder="${placeholder}"
-                oninput="updateRow(${secId}, ${row.id}, 'text', this.value); autoResize(this)"
-                onkeydown="handleRowKey(event, ${secId}, ${row.id})"
-      >${esc(row.text)}</textarea>
-      <div class="row-actions">
-        <button onclick="deleteRow(${secId}, ${row.id})" title="Slett">×</button>
-      </div>
-    </div>
-  `;
-}
-
 function handleRowKey(e, secId, rowId) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     const sec = sections.find(s => s.id === secId);
     if (!sec) return;
-    const rowIdx = sec.rows.findIndex(r => r.id === rowId);
-    const currentType = sec.rows[rowIdx]?.type || 'shot';
-    addRow(secId, currentType);
+    const idx = sec.rows.findIndex(r => r.id === rowId);
+    addRow(secId, sec.rows[idx]?.type || 'shot');
   }
 }
 
-// ── PREVIEW ────────────────────────────────────────────────────────────────
-function updatePreview() {
-  const el = document.getElementById('preview');
+// ── RENDER ──
+function renderAll() {
+  renderSections();
+  updatePreview();
+  updateStats();
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
   if (!sections.length) {
-    el.innerHTML = '<div class="preview-empty">Formattert shotlist vises her...</div>';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎬</div>Klikk «+ Seksjon» eller velg en mal for å starte</div>`;
     return;
   }
 
+  let shotNum = 0;
+  container.innerHTML = sections.map(sec => {
+    const rowsHtml = sec.rows.map(row => {
+      if (row.type === 'shot') shotNum++;
+      return renderRow(sec.id, row, row.type === 'shot' ? shotNum : null);
+    }).join('');
+
+    const color = sec.color || COLORS[0];
+    const collapsed = sec.collapsed ? 'collapsed' : '';
+    const shotCount = sec.rows.filter(r => r.type === 'shot').length;
+
+    return `
+      <div class="section-card ${collapsed}" data-id="${sec.id}" style="--sc:${color}"
+           draggable="true"
+           ondragstart="sdStart(event)" ondragover="sdOver(event)"
+           ondrop="sdDrop(event)" ondragend="sdEnd(event)">
+        <div class="sec-hdr">
+          <span class="grip" title="Dra for å flytte">⠿⠿</span>
+          <div class="color-dot" onclick="cycleColor(${sec.id})" title="Endre farge" draggable="false"></div>
+          <input class="sec-name" type="text" value="${esc(sec.name)}"
+                 placeholder="SEKSJONSOVERSKRIFT"
+                 oninput="updateSectionName(${sec.id}, this.value)"
+                 ondragstart="event.stopPropagation()">
+          <span class="sec-badge">${shotCount} shots</span>
+          <div class="sec-actions">
+            <button class="sec-btn" onclick="toggleCollapse(${sec.id})">${sec.collapsed ? '▶' : '▼'}</button>
+            <button class="sec-btn del" onclick="deleteSection(${sec.id})">✕</button>
+          </div>
+        </div>
+        <div class="sec-body">
+          ${rowsHtml}
+          <div class="add-row-bar">
+            <button class="btn-row sh" onclick="addRow(${sec.id},'shot')">+ Shot</button>
+            <button class="btn-row nt" onclick="addRow(${sec.id},'note')">+ Notat</button>
+            <button class="btn-row qt" onclick="addRow(${sec.id},'quote')">+ Sitat</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('.row-text').forEach(autoResize);
+}
+
+function renderRow(secId, row, shotNum) {
+  const pillClass = row.type === 'shot' ? 'pill-shot' : row.type === 'quote' ? 'pill-quote' : 'pill-note';
+  const pillText = row.type === 'shot' ? 'SHOT' : row.type === 'quote' ? 'SITAT' : 'NOTAT';
+  const textClass = row.type === 'quote' ? 'qt' : row.type === 'note' ? 'nt' : '';
+  const ph = row.type === 'shot' ? 'f.eks. Wide av stue · Clossup detalj'
+           : row.type === 'quote' ? '"Sitat fra intervjuobjekt..."'
+           : 'Notat / instruksjon...';
+  const numHtml = shotNum !== null
+    ? `<span class="shot-num">${String(shotNum).padStart(2,'0')}</span>`
+    : `<span class="shot-num" style="opacity:0">--</span>`;
+  const cb = row.type === 'shot'
+    ? `<div class="row-cb ${row.checked ? 'on' : ''}" onclick="toggleCheck(${secId},${row.id})"></div>`
+    : `<div style="width:13px;flex-shrink:0"></div>`;
+  const doneClass = row.checked ? 'done' : '';
+
+  return `
+    <div class="row-item ${doneClass}">
+      ${numHtml}
+      <span class="type-pill ${pillClass}">${pillText}</span>
+      ${cb}
+      <textarea id="r-${row.id}" class="row-text ${textClass}" rows="1"
+                placeholder="${ph}"
+                oninput="updateRow(${secId},${row.id},'text',this.value);autoResize(this)"
+                onkeydown="handleRowKey(event,${secId},${row.id})"
+      >${esc(row.text)}</textarea>
+      <div class="row-actions">
+        <button onclick="deleteRow(${secId},${row.id})">✕</button>
+      </div>
+    </div>`;
+}
+
+// ── STATS ──
+function updateStats() {
+  const totalShots = sections.reduce((a,s) => a + s.rows.filter(r => r.type==='shot').length, 0);
+  const done = sections.reduce((a,s) => a + s.rows.filter(r => r.type==='shot' && r.checked).length, 0);
+  const mins = totalShots * 3;
+  const timeStr = mins === 0 ? '—' : mins >= 60
+    ? `${Math.floor(mins/60)}t${mins%60 ? mins%60+'m':''}` : `${mins}m`;
+
+  document.getElementById('stShots').textContent = totalShots;
+  document.getElementById('stDone').textContent = done;
+  document.getElementById('stSecs').textContent = sections.length;
+  document.getElementById('stTime').textContent = timeStr;
+
+  const pct = totalShots > 0 ? Math.round((done / totalShots) * 100) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = `${done} / ${totalShots}`;
+}
+
+// ── PREVIEW ──
+function updatePreview() {
+  const el = document.getElementById('preview');
+  if (!sections.length) {
+    el.innerHTML = '<div class="prev-empty">Formattert shotlist\nvises her...</div>';
+    return;
+  }
   const m = getMeta();
   let out = '';
-
   if (m.client || m.date) {
-    const dateStr = m.date ? formatDate(m.date) : '';
-    out += `Shotlist${dateStr ? ' ' + dateStr : ''}${m.client ? ' — ' + m.client : ''}\n`;
+    const ds = m.date ? formatDate(m.date) : '';
+    out += `Shotlist${ds ? ' '+ds : ''}${m.client ? ' — '+m.client : ''}\n`;
     if (m.crew) out += `Fotograf: ${m.crew}\n`;
-    out += '─'.repeat(36) + '\n\n';
+    out += '─'.repeat(34) + '\n\n';
   }
-
   sections.forEach(sec => {
     if (sec.name) out += `${sec.name.toUpperCase()}\n\n`;
     sec.rows.forEach(row => {
       if (!row.text.trim()) return;
-      if (row.type === 'shot') {
-        out += `☐ ${row.text}\n`;
-      } else if (row.type === 'quote') {
-        out += `"${row.text}"\n`;
-      } else {
-        out += `${row.text}\n`;
-      }
+      out += row.type === 'shot' ? `☐ ${row.text}\n`
+           : row.type === 'quote' ? `"${row.text}"\n`
+           : `${row.text}\n`;
     });
     out += '\n';
   });
-
-  const shots = sections.reduce((a, s) => a + s.rows.filter(r => r.type === 'shot').length, 0);
-  out += `─`.repeat(36) + `\n${shots} shots totalt`;
-
+  const total = sections.reduce((a,s) => a + s.rows.filter(r => r.type==='shot').length, 0);
+  out += '─'.repeat(34) + `\n${total} shots totalt`;
   el.textContent = out;
 }
 
@@ -460,10 +728,18 @@ function formatDate(ds) {
 }
 
 function esc(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return (str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── COPY ───────────────────────────────────────────────────────────────────
+// ── FOCUS MODE ──
+function toggleFocus() {
+  focusMode = !focusMode;
+  document.getElementById('app').classList.toggle('focused', focusMode);
+  document.getElementById('focusBtn').classList.toggle('on', focusMode);
+  showToast(focusMode ? '⊞ Fokus-modus på' : '⊟ Fokus-modus av');
+}
+
+// ── COPY ──
 function copyToClipboard() {
   const text = document.getElementById('preview').textContent;
   if (!sections.length) return;
@@ -471,8 +747,8 @@ function copyToClipboard() {
     showToast('✓ Kopiert! Lim inn i Milanote');
     const btn = document.getElementById('copyBtn');
     btn.textContent = '✓ Kopiert!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Kopier til Milanote'; btn.classList.remove('copied'); }, 2000);
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Kopier til Milanote'; btn.classList.remove('ok'); }, 2000);
   });
 }
 
@@ -480,344 +756,151 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  setTimeout(() => t.classList.remove('show'), 2600);
 }
 
 function clearAll() {
+  if (sections.length && !confirm('Nullstille hele shotlisten?')) return;
   sections = [];
-  document.getElementById('metaClient').value = '';
-  document.getElementById('metaDate').value = '';
-  document.getElementById('metaCrew').value = '';
-  meta = { client: '', date: '', crew: '' };
+  ['metaClient','metaDate','metaCrew'].forEach(id => document.getElementById(id).value = '');
+  meta = { client:'', date:'', crew:'' };
   renderAll();
   save();
   showToast('Nullstilt');
 }
 
-// ── EXPORT ─────────────────────────────────────────────────────────────────
+// ── EXPORT ──
 function exportShot() {
   if (!sections.length) { showToast('Ingen shotlist å eksportere'); return; }
   const m = getMeta();
-  const payload = {
-    _app: 'sw-shotlist',
-    _version: 1,
-    exportedAt: new Date().toISOString(),
-    meta: m,
-    sections,
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const payload = { _app:'sw-shotlist', _version:1, exportedAt:new Date().toISOString(), meta:m, sections };
+  const blob = new Blob([JSON.stringify(payload,null,2)], { type:'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-
-  const clientStr = (m.client || 'Prosjekt').replace(/\s+/g, '-');
+  const clientStr = (m.client||'Prosjekt').replace(/\s+/g,'-');
   let datePart = '';
-  if (m.date) {
-    const [y, mo, d] = m.date.split('-');
-    datePart = `-${d}-${mo}-${y.slice(2)}`;
-  }
-  a.href = url;
-  a.download = `${clientStr}${datePart}.swshot`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  if (m.date) { const [y,mo,d] = m.date.split('-'); datePart = `-${d}-${mo}-${y.slice(2)}`; }
+  a.href = url; a.download = `${clientStr}${datePart}.swshot`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   showToast(`✓ Eksportert: ${a.download}`);
 }
 
-// ── IMPORT ─────────────────────────────────────────────────────────────────
-function importShot() {
-  document.getElementById('importFileInput').click();
-}
+// ── IMPORT ──
+function importShot() { document.getElementById('importFileInput').click(); }
 
 function handleImportFile(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
+  const file = e.target.files[0]; e.target.value = '';
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = ev => {
     try {
-      const parsed = JSON.parse(ev.target.result);
-      if (parsed._app !== 'sw-shotlist') {
-        showToast('✕ Ugyldig fil — ikke en Studio Wallin shotlist');
-        return;
-      }
-      sections = parsed.sections || [];
-      const m = parsed.meta || {};
+      const p = JSON.parse(ev.target.result);
+      if (p._app !== 'sw-shotlist') { showToast('✕ Ugyldig fil'); return; }
+      sections = (p.sections || []).map((s,i) => ({ collapsed:false, color:COLORS[i%COLORS.length], ...s }));
+      const m = p.meta || {};
       document.getElementById('metaClient').value = m.client || '';
       document.getElementById('metaDate').value = m.date || '';
       document.getElementById('metaCrew').value = m.crew || '';
-      meta = m;
-      renderAll();
-      save();
+      meta = m; renderAll(); save();
       showToast(`✓ Lastet inn: ${m.client || 'Ukjent'}`);
-    } catch {
-      showToast('✕ Kunne ikke lese filen');
-    }
+    } catch { showToast('✕ Kunne ikke lese filen'); }
   };
   reader.readAsText(file);
 }
 
-// ── SECTION DRAG & DROP ────────────────────────────────────────────────────
-function sdStart(e) { dragSrc = e.currentTarget; dragSrc.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
-function sdOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+// ── DRAG & DROP ──
+function sdStart(e) {
+  dragSrc = e.currentTarget;
+  dragSrc.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function sdOver(e) {
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.section-card').forEach(c => c.classList.remove('drag-over'));
+  if (e.currentTarget !== dragSrc) e.currentTarget.classList.add('drag-over');
+}
 function sdDrop(e) {
   e.preventDefault();
   const target = e.currentTarget;
+  document.querySelectorAll('.section-card').forEach(c => c.classList.remove('drag-over'));
   if (!dragSrc || dragSrc === target) return;
   const si = sections.findIndex(s => s.id === parseFloat(dragSrc.dataset.id));
   const ti = sections.findIndex(s => s.id === parseFloat(target.dataset.id));
   if (si < 0 || ti < 0) return;
   const [moved] = sections.splice(si, 1);
   sections.splice(ti, 0, moved);
-  renderAll();
-  save();
+  renderAll(); save();
 }
-function sdEnd(e) { if (dragSrc) dragSrc.style.opacity = '1'; dragSrc = null; }
+function sdEnd() {
+  document.querySelectorAll('.section-card').forEach(c => {
+    c.classList.remove('drag-over','dragging');
+  });
+  dragSrc = null;
+}
 
-// ── TEMPLATES ──────────────────────────────────────────────────────────────
+// ── TEMPLATES ──
 const templates = {
-  bolig: [
-    { name: 'Åpning', rows: [
-      { type: 'note', text: 'Ute? Drone?' },
-      { type: 'shot', text: 'Ute' },
-      { type: 'shot', text: 'Drone' },
-      { type: 'note', text: 'Markus i ute som ser forbi llike' },
-    ]},
-    { name: 'Kjøkken / Spisepass', rows: [
-      { type: 'shot', text: 'Wide av kjøkken' },
-      { type: 'shot', text: 'Wide av spisebordet' },
-      { type: 'shot', text: 'Clossup Detalj kjøkken' },
-      { type: 'shot', text: 'Clossup detalj font' },
-      { type: 'shot', text: 'Clossup flisplikt logo' },
-      { type: 'shot', text: 'Clossup logo sikmens' },
-    ]},
-    { name: 'Stue', rows: [
-      { type: 'shot', text: 'Markus mitt i stua med viceaner' },
-      { type: 'shot', text: 'Wide av tom stue' },
-      { type: 'shot', text: 'Wide av alle soner' },
-      { type: 'shot', text: 'Clossup av stue detaljer' },
-      { type: 'shot', text: 'Clossup av koselenk' },
-      { type: 'shot', text: 'Clossup av spiselenk med stua i BG' },
-    ]},
-    { name: 'Minste soverom', rows: [
-      { type: 'shot', text: 'Clossup detalj (horisontalt)' },
-      { type: 'shot', text: 'Clossup skap' },
-      { type: 'shot', text: 'Clossup detaljer' },
-      { type: 'shot', text: 'Wide av rom' },
-    ]},
-    { name: 'Hovedsoverom', rows: [
-      { type: 'shot', text: 'Wide av tomt rom' },
-      { type: 'shot', text: 'Wide av seng' },
-      { type: 'shot', text: 'Wide av garderobeskop' },
-      { type: 'shot', text: 'Clossup av garderobeskop' },
-      { type: 'shot', text: 'Clossup av andre detaljer' },
-    ]},
-    { name: 'Standard / Tekniske kvaliteter', rows: [
-      { type: 'shot', text: 'Wide av gulvvarmstyring' },
-      { type: 'shot', text: 'Clossup av varmepumpe' },
-      { type: 'shot', text: 'Clossup/Wide av passivhus?' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'quote', text: 'Kunne du tenke deg å se en slik leilighet, eller er nygjerrlig på noe av det vi har til salgs i Virkebyen, er det bare å ta kontakt med oss. Vi har noe som passer alle' },
-      { type: 'shot', text: 'Ute av markus som snakker' },
-    ]},
+  bolig:[
+    {name:'Åpning',rows:[{type:'note',text:'Ute? Drone?'},{type:'shot',text:'Ute'},{type:'shot',text:'Drone'},{type:'note',text:'Markus i ute som ser forbi llike'}]},
+    {name:'Kjøkken / Spisepass',rows:[{type:'shot',text:'Wide av kjøkken'},{type:'shot',text:'Wide av spisebordet'},{type:'shot',text:'Clossup Detalj kjøkken'},{type:'shot',text:'Clossup detalj font'},{type:'shot',text:'Clossup flisplikt logo'},{type:'shot',text:'Clossup logo sikmens'}]},
+    {name:'Stue',rows:[{type:'shot',text:'Markus mitt i stua med viceaner'},{type:'shot',text:'Wide av tom stue'},{type:'shot',text:'Wide av alle soner'},{type:'shot',text:'Clossup av stue detaljer'},{type:'shot',text:'Clossup av koselenk'},{type:'shot',text:'Clossup av spiselenk med stua i BG'}]},
+    {name:'Minste soverom',rows:[{type:'shot',text:'Clossup detalj (horisontalt)'},{type:'shot',text:'Clossup skap'},{type:'shot',text:'Clossup detaljer'},{type:'shot',text:'Wide av rom'}]},
+    {name:'Hovedsoverom',rows:[{type:'shot',text:'Wide av tomt rom'},{type:'shot',text:'Wide av seng'},{type:'shot',text:'Wide av garderobeskop'},{type:'shot',text:'Clossup av garderobeskop'},{type:'shot',text:'Clossup av andre detaljer'}]},
+    {name:'Standard / Tekniske kvaliteter',rows:[{type:'shot',text:'Wide av gulvvarmstyring'},{type:'shot',text:'Clossup av varmepumpe'},{type:'shot',text:'Clossup/Wide av passivhus?'}]},
+    {name:'Avslutning',rows:[{type:'quote',text:'Kunne du tenke deg å se en slik leilighet, eller er nygjerrlig på noe av det vi har til salgs i Virkebyen, er det bare å ta kontakt med oss. Vi har noe som passer alle'},{type:'shot',text:'Ute av markus som snakker'}]},
   ],
-  intervju: [
-    { name: 'Åpning', rows: [
-      { type: 'shot', text: 'Total — sett opp' },
-      { type: 'shot', text: 'Halvtotal — intervjuobjekt' },
-      { type: 'note', text: 'Sjekk lys og bakgrunn' },
-    ]},
-    { name: 'Hoveddel', rows: [
-      { type: 'shot', text: 'Halvnær — snakker til kamera' },
-      { type: 'shot', text: 'Nær — ansikt' },
-      { type: 'shot', text: 'Clossup — hender/detalj' },
-      { type: 'shot', text: 'Reaksjon — lytter' },
-    ]},
-    { name: 'B-roll', rows: [
-      { type: 'shot', text: 'Miljø — arbeidssted/kontekst' },
-      { type: 'shot', text: 'Detaljer — relevant produkt/sted' },
-      { type: 'shot', text: 'Cutaway — publikum eller produkt' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'shot', text: 'Halvnær — avslutningsbudskap' },
-      { type: 'quote', text: 'Avslutningssitat fra intervjuobjekt' },
-    ]},
+  intervju:[
+    {name:'Åpning',rows:[{type:'shot',text:'Total — sett opp'},{type:'shot',text:'Halvtotal — intervjuobjekt'},{type:'note',text:'Sjekk lys og bakgrunn'}]},
+    {name:'Hoveddel',rows:[{type:'shot',text:'Halvnær — snakker til kamera'},{type:'shot',text:'Nær — ansikt'},{type:'shot',text:'Clossup — hender/detalj'},{type:'shot',text:'Reaksjon — lytter'}]},
+    {name:'B-roll',rows:[{type:'shot',text:'Miljø — arbeidssted/kontekst'},{type:'shot',text:'Detaljer — relevant produkt/sted'},{type:'shot',text:'Cutaway — publikum eller produkt'}]},
+    {name:'Avslutning',rows:[{type:'shot',text:'Halvnær — avslutningsbudskap'},{type:'quote',text:'Avslutningssitat fra intervjuobjekt'}]},
   ],
-  social: [
-    { name: 'Hook (0–2 sek)', rows: [
-      { type: 'shot', text: 'Nær — fang oppmerksomhet' },
-      { type: 'note', text: 'Sterk åpning, ingen innledning' },
-    ]},
-    { name: 'Hoveddel', rows: [
-      { type: 'shot', text: 'Halvnær — forklaring/demo' },
-      { type: 'shot', text: 'B-roll — produkt/miljø' },
-      { type: 'shot', text: 'Cutaway — detalj' },
-    ]},
-    { name: 'Hook SoMe', rows: [
-      { type: 'note', text: 'Forslag fra Emilia:' },
-      { type: 'quote', text: 'Hookforslag 1' },
-      { type: 'quote', text: 'Hookforslag 2' },
-    ]},
-    { name: 'Outro / CTA', rows: [
-      { type: 'shot', text: 'Halvnær — se i kamera' },
-      { type: 'note', text: 'Tydelig call-to-action' },
-    ]},
+  social:[
+    {name:'Hook (0–2 sek)',rows:[{type:'shot',text:'Nær — fang oppmerksomhet'},{type:'note',text:'Sterk åpning, ingen innledning'}]},
+    {name:'Hoveddel',rows:[{type:'shot',text:'Halvnær — forklaring/demo'},{type:'shot',text:'B-roll — produkt/miljø'},{type:'shot',text:'Cutaway — detalj'}]},
+    {name:'Hook SoMe',rows:[{type:'note',text:'Forslag fra Emilia:'},{type:'quote',text:'Hookforslag 1'},{type:'quote',text:'Hookforslag 2'}]},
+    {name:'Outro / CTA',rows:[{type:'shot',text:'Halvnær — se i kamera'},{type:'note',text:'Tydelig call-to-action'}]},
   ],
-  event: [
-    { name: 'Ankomst', rows: [
-      { type: 'shot', text: 'Drone — oversikt' },
-      { type: 'shot', text: 'Wide — inngang/fasade' },
-      { type: 'shot', text: 'Cutaway — skilt/logo' },
-    ]},
-    { name: 'Detaljer', rows: [
-      { type: 'shot', text: 'Clossup — dekor/setup' },
-      { type: 'shot', text: 'Wide — lokalet fyller seg' },
-    ]},
-    { name: 'Program / Scene', rows: [
-      { type: 'shot', text: 'Wide — scene/talerstol' },
-      { type: 'shot', text: 'Halvnær — taler' },
-      { type: 'shot', text: 'Reaksjon — publikum' },
-    ]},
-    { name: 'Intervjuer på stedet', rows: [
-      { type: 'shot', text: 'Halvnær — deltaker 1' },
-      { type: 'shot', text: 'Halvnær — deltaker 2' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'shot', text: 'Wide — stemning' },
-      { type: 'shot', text: 'Drone — utgang' },
-    ]},
+  event:[
+    {name:'Ankomst',rows:[{type:'shot',text:'Drone — oversikt'},{type:'shot',text:'Wide — inngang/fasade'},{type:'shot',text:'Cutaway — skilt/logo'}]},
+    {name:'Detaljer',rows:[{type:'shot',text:'Clossup — dekor/setup'},{type:'shot',text:'Wide — lokalet fyller seg'}]},
+    {name:'Program / Scene',rows:[{type:'shot',text:'Wide — scene/talerstol'},{type:'shot',text:'Halvnær — taler'},{type:'shot',text:'Reaksjon — publikum'}]},
+    {name:'Intervjuer på stedet',rows:[{type:'shot',text:'Halvnær — deltaker 1'},{type:'shot',text:'Halvnær — deltaker 2'}]},
+    {name:'Avslutning',rows:[{type:'shot',text:'Wide — stemning'},{type:'shot',text:'Drone — utgang'}]},
   ],
-  produkt: [
-    { name: 'Hero', rows: [
-      { type: 'shot', text: 'Wide — produkt sentrert, ren bakgrunn' },
-      { type: 'shot', text: 'Halvtotal — kontekstuell' },
-    ]},
-    { name: 'Detaljer', rows: [
-      { type: 'shot', text: 'Ekstrem nær — tekstur/overflate' },
-      { type: 'shot', text: 'Clossup — logo/merking' },
-      { type: 'shot', text: 'Clossup — nøkkelfunksjon' },
-    ]},
-    { name: 'I bruk', rows: [
-      { type: 'shot', text: 'Halvtotal — bruker med produkt' },
-      { type: 'shot', text: 'Nær — hender i bruk' },
-      { type: 'shot', text: 'POV — brukers perspektiv' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'shot', text: 'Wide — produkt + miljø' },
-      { type: 'shot', text: 'Hero shot — logo synlig' },
-    ]},
+  produkt:[
+    {name:'Hero',rows:[{type:'shot',text:'Wide — produkt sentrert, ren bakgrunn'},{type:'shot',text:'Halvtotal — kontekstuell'}]},
+    {name:'Detaljer',rows:[{type:'shot',text:'Ekstrem nær — tekstur/overflate'},{type:'shot',text:'Clossup — logo/merking'},{type:'shot',text:'Clossup — nøkkelfunksjon'}]},
+    {name:'I bruk',rows:[{type:'shot',text:'Halvtotal — bruker med produkt'},{type:'shot',text:'Nær — hender i bruk'},{type:'shot',text:'POV — brukers perspektiv'}]},
+    {name:'Avslutning',rows:[{type:'shot',text:'Wide — produkt + miljø'},{type:'shot',text:'Hero shot — logo synlig'}]},
   ],
-  podcast: [
-    { name: 'Rigg / Pre-show', rows: [
-      { type: 'note', text: 'Sjekk lys, mikrofoner og bakgrunn' },
-      { type: 'shot', text: 'Wide — full sett-up, begge verter' },
-      { type: 'shot', text: 'Halvtotal — kamera A (hoved)' },
-      { type: 'shot', text: 'Halvtotal — kamera B (gjest/co-host)' },
-    ]},
-    { name: 'Innledning', rows: [
-      { type: 'shot', text: 'Nær — vert ser i kamera, intro' },
-      { type: 'shot', text: 'Cutaway — logo/tittelskilt' },
-      { type: 'note', text: 'La dem snakke naturlig før opptaket starter' },
-    ]},
-    { name: 'Hoveddel — samtale', rows: [
-      { type: 'shot', text: 'Halvnær — aktiv taler (A-cam)' },
-      { type: 'shot', text: 'Halvnær — lytter/reaksjon (B-cam)' },
-      { type: 'shot', text: 'Over skulder — dynamisk kutt' },
-      { type: 'shot', text: 'Nær — hender/kroppsspråk' },
-    ]},
-    { name: 'B-roll / Cutaways', rows: [
-      { type: 'shot', text: 'Clossup — mikrofon i bruk' },
-      { type: 'shot', text: 'Clossup — headphones/utstyr' },
-      { type: 'shot', text: 'Cutaway — notatbok, skjerm, detaljer' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'shot', text: 'Wide — begge verter, naturlig avslutning' },
-      { type: 'shot', text: 'Nær — vert ser i kamera, outro' },
-      { type: 'quote', text: 'Avslutningssitat / call to action' },
-    ]},
+  podcast:[
+    {name:'Rigg / Pre-show',rows:[{type:'note',text:'Sjekk lys, mikrofoner og bakgrunn'},{type:'shot',text:'Wide — full sett-up, begge verter'},{type:'shot',text:'Halvtotal — kamera A (hoved)'},{type:'shot',text:'Halvtotal — kamera B (gjest/co-host)'}]},
+    {name:'Innledning',rows:[{type:'shot',text:'Nær — vert ser i kamera, intro'},{type:'shot',text:'Cutaway — logo/tittelskilt'},{type:'note',text:'La dem snakke naturlig før opptaket starter'}]},
+    {name:'Hoveddel — samtale',rows:[{type:'shot',text:'Halvnær — aktiv taler (A-cam)'},{type:'shot',text:'Halvnær — lytter/reaksjon (B-cam)'},{type:'shot',text:'Over skulder — dynamisk kutt'},{type:'shot',text:'Nær — hender/kroppsspråk'}]},
+    {name:'B-roll / Cutaways',rows:[{type:'shot',text:'Clossup — mikrofon i bruk'},{type:'shot',text:'Clossup — headphones/utstyr'},{type:'shot',text:'Cutaway — notatbok, skjerm, detaljer'}]},
+    {name:'Avslutning',rows:[{type:'shot',text:'Wide — begge verter, naturlig avslutning'},{type:'shot',text:'Nær — vert ser i kamera, outro'},{type:'quote',text:'Avslutningssitat / call to action'}]},
   ],
-  testimonial: [
-    { name: 'Åpning / Etablering', rows: [
-      { type: 'shot', text: 'Wide — kunde i sitt miljø' },
-      { type: 'shot', text: 'Halvtotal — kunde ved arbeidssted/lokasjon' },
-      { type: 'note', text: 'Vis kontekst — hvem er denne personen?' },
-    ]},
-    { name: 'Intervju', rows: [
-      { type: 'shot', text: 'Halvnær — kunde snakker (hoved)' },
-      { type: 'shot', text: 'Nær — ansikt og reaksjoner' },
-      { type: 'shot', text: 'Over skulder — fra intervjuers side' },
-      { type: 'quote', text: 'Nøkkel-sitat fra kunden' },
-    ]},
-    { name: 'Produkt / Tjeneste i bruk', rows: [
-      { type: 'shot', text: 'Halvtotal — kunde bruker produktet/tjenesten' },
-      { type: 'shot', text: 'Clossup — hender/skjerm/detalj' },
-      { type: 'shot', text: 'Cutaway — resultat eller leveranse' },
-    ]},
-    { name: 'B-roll', rows: [
-      { type: 'shot', text: 'Miljø — arbeidssted eller lokasjon' },
-      { type: 'shot', text: 'Detaljer — relevant for kundens bransje' },
-    ]},
-    { name: 'Avslutning', rows: [
-      { type: 'shot', text: 'Halvnær — avslutningsbudskap' },
-      { type: 'quote', text: 'Sterkeste sitat — brukes som sluttkort' },
-      { type: 'shot', text: 'Wide — naturlig avslutning i miljø' },
-    ]},
+  testimonial:[
+    {name:'Åpning / Etablering',rows:[{type:'shot',text:'Wide — kunde i sitt miljø'},{type:'shot',text:'Halvtotal — kunde ved arbeidssted/lokasjon'},{type:'note',text:'Vis kontekst — hvem er denne personen?'}]},
+    {name:'Intervju',rows:[{type:'shot',text:'Halvnær — kunde snakker (hoved)'},{type:'shot',text:'Nær — ansikt og reaksjoner'},{type:'shot',text:'Over skulder — fra intervjuers side'},{type:'quote',text:'Nøkkel-sitat fra kunden'}]},
+    {name:'Produkt / Tjeneste i bruk',rows:[{type:'shot',text:'Halvtotal — kunde bruker produktet/tjenesten'},{type:'shot',text:'Clossup — hender/skjerm/detalj'},{type:'shot',text:'Cutaway — resultat eller leveranse'}]},
+    {name:'B-roll',rows:[{type:'shot',text:'Miljø — arbeidssted eller lokasjon'},{type:'shot',text:'Detaljer — relevant for kundens bransje'}]},
+    {name:'Avslutning',rows:[{type:'shot',text:'Halvnær — avslutningsbudskap'},{type:'quote',text:'Sterkeste sitat — brukes som sluttkort'},{type:'shot',text:'Wide — naturlig avslutning i miljø'}]},
   ],
-  bts: [
-    { name: 'Ankomst / Rigg', rows: [
-      { type: 'shot', text: 'Wide — teamet ankommer lokasjon' },
-      { type: 'shot', text: 'Clossup — utstyr pakkes ut/rigges' },
-      { type: 'shot', text: 'Cutaway — kamera, lys, kabler' },
-      { type: 'note', text: 'Dokumenter riggeprosessen' },
-    ]},
-    { name: 'Under opptak', rows: [
-      { type: 'shot', text: 'Wide — kameramann i aksjon' },
-      { type: 'shot', text: 'Over skulder — monitor/skjerm' },
-      { type: 'shot', text: 'Nær — regissør/produsent gir instrukser' },
-      { type: 'shot', text: 'Cutaway — crew-kommunikasjon' },
-    ]},
-    { name: 'Crew og stemning', rows: [
-      { type: 'shot', text: 'Halvnær — crew i naturlig situasjon' },
-      { type: 'shot', text: 'Cutaway — pause/mat/latter' },
-      { type: 'shot', text: 'Reaksjon — crew ser playback' },
-    ]},
-    { name: 'Avslutning / Wrap', rows: [
-      { type: 'shot', text: 'Wide — pakker ned, stemning' },
-      { type: 'shot', text: 'Halvnær — avsluttende kommentar fra crew' },
-      { type: 'note', text: 'Speil en ansatt til kort avsluttende intervju' },
-    ]},
+  bts:[
+    {name:'Ankomst / Rigg',rows:[{type:'shot',text:'Wide — teamet ankommer lokasjon'},{type:'shot',text:'Clossup — utstyr pakkes ut/rigges'},{type:'shot',text:'Cutaway — kamera, lys, kabler'},{type:'note',text:'Dokumenter riggeprosessen'}]},
+    {name:'Under opptak',rows:[{type:'shot',text:'Wide — kameramann i aksjon'},{type:'shot',text:'Over skulder — monitor/skjerm'},{type:'shot',text:'Nær — regissør/produsent gir instrukser'},{type:'shot',text:'Cutaway — crew-kommunikasjon'}]},
+    {name:'Crew og stemning',rows:[{type:'shot',text:'Halvnær — crew i naturlig situasjon'},{type:'shot',text:'Cutaway — pause/mat/latter'},{type:'shot',text:'Reaksjon — crew ser playback'}]},
+    {name:'Avslutning / Wrap',rows:[{type:'shot',text:'Wide — pakker ned, stemning'},{type:'shot',text:'Halvnær — avsluttende kommentar fra crew'},{type:'note',text:'Speil en ansatt til kort avsluttende intervju'}]},
   ],
-  brand: [
-    { name: 'Identitet / Åpning', rows: [
-      { type: 'shot', text: 'Drone — lokasjon/bedrift ovenfra' },
-      { type: 'shot', text: 'Wide — fasade/inngang med logo' },
-      { type: 'shot', text: 'Clossup — logo/merke' },
-      { type: 'note', text: 'Tonen settes her — vis hvem de er' },
-    ]},
-    { name: 'Mennesker / Kultur', rows: [
-      { type: 'shot', text: 'Wide — team i arbeid' },
-      { type: 'shot', text: 'Halvnær — ansatt i fokus' },
-      { type: 'shot', text: 'Halvnær — ansatt 2' },
-      { type: 'shot', text: 'Nær — hender, detaljer, kompetanse' },
-    ]},
-    { name: 'Produkt / Tjeneste', rows: [
-      { type: 'shot', text: 'Wide — produkt/tjeneste i kontekst' },
-      { type: 'shot', text: 'Halvtotal — demonstrasjon' },
-      { type: 'shot', text: 'Clossup — kvalitetsdetalj' },
-    ]},
-    { name: 'Intervju / Budskap', rows: [
-      { type: 'shot', text: 'Halvnær — leder/grunnlegger' },
-      { type: 'quote', text: 'Kjernebudskap fra ledelse' },
-      { type: 'shot', text: 'Halvnær — ansatt om arbeidshverdagen' },
-      { type: 'quote', text: 'Ansattsitat — autentisk stemme' },
-    ]},
-    { name: 'Avslutning / Logo-kutt', rows: [
-      { type: 'shot', text: 'Wide — team samlet' },
-      { type: 'shot', text: 'Clossup — logo/produkt' },
-      { type: 'shot', text: 'Drone — ut fra lokasjon' },
-      { type: 'note', text: 'Sluttkort: logo + tagline + kontakt' },
-    ]},
+  brand:[
+    {name:'Identitet / Åpning',rows:[{type:'shot',text:'Drone — lokasjon/bedrift ovenfra'},{type:'shot',text:'Wide — fasade/inngang med logo'},{type:'shot',text:'Clossup — logo/merke'},{type:'note',text:'Tonen settes her — vis hvem de er'}]},
+    {name:'Mennesker / Kultur',rows:[{type:'shot',text:'Wide — team i arbeid'},{type:'shot',text:'Halvnær — ansatt i fokus'},{type:'shot',text:'Halvnær — ansatt 2'},{type:'shot',text:'Nær — hender, detaljer, kompetanse'}]},
+    {name:'Produkt / Tjeneste',rows:[{type:'shot',text:'Wide — produkt/tjeneste i kontekst'},{type:'shot',text:'Halvtotal — demonstrasjon'},{type:'shot',text:'Clossup — kvalitetsdetalj'}]},
+    {name:'Intervju / Budskap',rows:[{type:'shot',text:'Halvnær — leder/grunnlegger'},{type:'quote',text:'Kjernebudskap fra ledelse'},{type:'shot',text:'Halvnær — ansatt om arbeidshverdagen'},{type:'quote',text:'Ansattsitat — autentisk stemme'}]},
+    {name:'Avslutning / Logo-kutt',rows:[{type:'shot',text:'Wide — team samlet'},{type:'shot',text:'Clossup — logo/produkt'},{type:'shot',text:'Drone — ut fra lokasjon'},{type:'note',text:'Sluttkort: logo + tagline + kontakt'}]},
   ],
 };
 
@@ -825,9 +908,8 @@ function loadTemplate(key) {
   if (sections.length && !confirm('Erstatte eksisterende shotlist med mal?')) return;
   const tpl = templates[key];
   if (!tpl) return;
-  sections = tpl.map(s => makeSection(s.name, s.rows.map(r => makeRow(r.type, r.text))));
-  renderAll();
-  save();
+  sections = tpl.map((s,i) => makeSection(s.name, s.rows.map(r => makeRow(r.type, r.text)), COLORS[i % COLORS.length]));
+  renderAll(); save();
   showToast(`Mal lastet: ${key}`);
 }
 </script>
