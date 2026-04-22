@@ -308,17 +308,90 @@ pre#preview{font-family:var(--mono);font-size:10.5px;line-height:1.85;color:#565
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
 
+/* ── OVERFLOW MENU ── */
+.hdr-mobile-only{display:none;position:relative}
+.overflow-menu{
+  display:none;position:absolute;top:calc(100% + 6px);right:0;
+  background:#0d0d20;border:1px solid var(--b2);border-radius:10px;
+  padding:5px;min-width:164px;z-index:9000;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.overflow-menu.open{display:flex;flex-direction:column}
+.overflow-menu button{
+  background:none;border:none;color:var(--text);text-align:left;
+  padding:10px 13px;font-size:13px;font-family:var(--body);cursor:pointer;
+  border-radius:6px;transition:background .1s;
+}
+.overflow-menu button:hover{background:var(--s3)}
+
+/* ── TAB BAR (mobile only) ── */
+.tab-bar{display:none}
+
+/* ── DESKTOP RESPONSIVE ── */
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
   .sidebar{border-left:none;border-top:1px solid var(--b1);max-height:340px}
   .project-meta{grid-template-columns:1fr 1fr}
   .stats-grid{grid-template-columns:repeat(4,1fr)}
 }
-@media(max-width:520px){
-  header{padding:10px 14px}
-  .editor{padding:14px}
+
+/* ── MOBILE ── */
+@media(max-width:767px){
+  header{
+    padding-top:max(12px, env(safe-area-inset-top));
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right));
+  }
+  .hdr-desktop-only{display:none!important}
+  .hdr-mobile-only{display:block}
+
+  .app{display:block;position:relative;overflow:hidden}
+  .editor,.sidebar{
+    position:absolute;inset:0;width:100%;height:100%;
+    overflow-y:auto;border:none;max-height:none;
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  .editor{transform:translateX(0);padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  .sidebar{transform:translateX(100%)}
+  .app.tab-sidebar .editor{transform:translateX(-100%)}
+  .app.tab-sidebar .sidebar{transform:translateX(0)}
+  .app.focused .sidebar{opacity:1;pointer-events:auto}
+
+  .project-meta{grid-template-columns:1fr}
   .stats-grid{grid-template-columns:1fr 1fr}
   .brand-label{display:none}
+
+  /* tab bar */
+  .tab-bar{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    height:calc(56px + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    padding-left:env(safe-area-inset-left);
+    padding-right:env(safe-area-inset-right);
+    background:rgba(6,6,15,.94);border-top:1px solid var(--b1);
+    backdrop-filter:blur(18px);z-index:200;
+    justify-content:space-around;align-items:stretch;
+  }
+  .tab-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:none;border:none;
+    color:var(--mid);cursor:pointer;gap:3px;
+    font-family:var(--body);font-size:10px;font-weight:600;
+    letter-spacing:.04em;transition:color .15s;min-height:44px;
+  }
+  .tab-btn.active{color:var(--accent2)}
+  .tab-icon{font-size:18px;line-height:1}
+  .toast{bottom:calc(72px + env(safe-area-inset-bottom))}
+
+  /* touch targets */
+  .row-cb{width:22px;height:22px;margin-top:2px;border-radius:5px}
+  .row-cb.on::after{font-size:12px}
+  .row-actions{opacity:1}
+  .row-actions button{padding:6px 10px;font-size:14px;min-height:36px}
+  .btn-row{padding:8px 14px;font-size:11px;min-height:36px}
+  .sec-btn{padding:8px 10px;min-height:36px;font-size:13px}
+  .color-dot{width:14px;height:14px}
+  .add-sec-btn{padding:16px}
 }
 </style>
 </head>
@@ -333,12 +406,21 @@ pre#preview{font-family:var(--mono);font-size:10.5px;line-height:1.85;color:#565
     </div>
   </div>
   <div class="hdr-right">
-    <button class="btn-icon" id="focusBtn" onclick="toggleFocus()" title="Fokus-modus (F)">⊞</button>
-    <div class="vline"></div>
-    <button class="btn btn-ghost" onclick="importShot()">↑ Importer</button>
-    <button class="btn btn-ghost" onclick="exportShot()">↓ Eksporter</button>
-    <button class="btn btn-ghost" onclick="clearAll()">Nullstill</button>
+    <button class="btn-icon hdr-desktop-only" id="focusBtn" onclick="toggleFocus()" title="Fokus-modus (F)">⊞</button>
+    <div class="vline hdr-desktop-only"></div>
+    <button class="btn btn-ghost hdr-desktop-only" onclick="importShot()">↑ Importer</button>
+    <button class="btn btn-ghost hdr-desktop-only" onclick="exportShot()">↓ Eksporter</button>
+    <button class="btn btn-ghost hdr-desktop-only" onclick="clearAll()">Nullstill</button>
     <button class="btn btn-primary" onclick="addSection()">+ Seksjon</button>
+    <div class="hdr-mobile-only">
+      <button class="btn-icon" id="overflowBtn" onclick="toggleOverflow()">⋯</button>
+      <div class="overflow-menu" id="overflowMenu">
+        <button onclick="importShot();closeOverflow()">↑ Importer</button>
+        <button onclick="exportShot();closeOverflow()">↓ Eksporter</button>
+        <button onclick="toggleFocus();closeOverflow()">⊞ Fokus-modus</button>
+        <button onclick="clearAll();closeOverflow()">Nullstill</button>
+      </div>
+    </div>
   </div>
 </header>
 <input type="file" id="importFileInput" accept=".swshot,.json" style="display:none" onchange="handleImportFile(event)">
@@ -424,6 +506,17 @@ pre#preview{font-family:var(--mono);font-size:10.5px;line-height:1.85;color:#565
     </div>
   </div>
 </div>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tabEditor" onclick="switchTab('editor')">
+    <span class="tab-icon">✎</span>
+    <span>Shotlist</span>
+  </button>
+  <button class="tab-btn" id="tabSidebar" onclick="switchTab('sidebar')">
+    <span class="tab-icon">◎</span>
+    <span>Oversikt</span>
+  </button>
+</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -737,6 +830,24 @@ function toggleFocus() {
   document.getElementById('app').classList.toggle('focused', focusMode);
   document.getElementById('focusBtn').classList.toggle('on', focusMode);
   showToast(focusMode ? '⊞ Fokus-modus på' : '⊟ Fokus-modus av');
+}
+
+// ── OVERFLOW MENU ──
+function toggleOverflow() {
+  document.getElementById('overflowMenu').classList.toggle('open');
+}
+function closeOverflow() {
+  document.getElementById('overflowMenu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#overflowBtn') && !e.target.closest('#overflowMenu')) closeOverflow();
+});
+
+// ── MOBILE TAB SWITCHING ──
+function switchTab(tab) {
+  document.getElementById('app').classList.toggle('tab-sidebar', tab === 'sidebar');
+  document.getElementById('tabEditor').classList.toggle('active', tab === 'editor');
+  document.getElementById('tabSidebar').classList.toggle('active', tab === 'sidebar');
 }
 
 // ── COPY ──
