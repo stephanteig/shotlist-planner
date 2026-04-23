@@ -2,15 +2,30 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use tauri::Emitter;
 
-/// Binds an ephemeral localhost port, appends the correct redirect_uri to the
-/// provided Google auth URL, opens it in the system browser, then waits for
-/// the OAuth redirect. Emits "oauth::code" with the auth code when done.
+fn percent_decode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut iter = s.chars().peekable();
+    while let Some(c) = iter.next() {
+        if c == '%' {
+            let h1 = iter.next().and_then(|c| c.to_digit(16));
+            let h2 = iter.next().and_then(|c| c.to_digit(16));
+            if let (Some(h1), Some(h2)) = (h1, h2) {
+                out.push(char::from(((h1 << 4) | h2) as u8));
+            }
+        } else if c == '+' {
+            out.push(' ');
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 #[tauri::command]
 fn start_oauth_listener(app_handle: tauri::AppHandle, url: String) -> Result<u16, String> {
     let listener = TcpListener::bind("127.0.0.1:0").map_err(|e| e.to_string())?;
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
 
-    // Append redirect_uri now that we know the port
     let full_url = format!("{}&redirect_uri=http://127.0.0.1:{}", url, port);
     open::that_detached(&full_url).map_err(|e| format!("Failed to open browser: {e}"))?;
 
@@ -24,6 +39,7 @@ fn start_oauth_listener(app_handle: tauri::AppHandle, url: String) -> Result<u16
         let n = stream.read(&mut buf).unwrap_or(0);
         let request = String::from_utf8_lossy(&buf[..n]);
 
+        // Parse code from "GET /?code=xxx&... HTTP/1.1" and URL-decode it
         let code = request
             .lines()
             .next()
@@ -32,7 +48,8 @@ fn start_oauth_listener(app_handle: tauri::AppHandle, url: String) -> Result<u16
             .and_then(|qs| {
                 qs.split('&')
                     .find(|p| p.starts_with("code="))
-                    .and_then(|p| p.splitn(2, '=').nth(1).map(String::from))
+                    .and_then(|p| p.splitn(2, '=').nth(1))
+                    .map(percent_decode)
             });
 
         let html = r#"<!DOCTYPE html>
