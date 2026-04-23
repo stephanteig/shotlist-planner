@@ -20,6 +20,7 @@ async function pkce(): Promise<{ verifier: string; challenge: string }> {
 
 export async function signInWithGoogleDesktop(): Promise<void> {
   const clientId = import.meta.env.VITE_GOOGLE_DESKTOP_CLIENT_ID;
+  const clientSecret = import.meta.env.VITE_GOOGLE_DESKTOP_CLIENT_SECRET ?? "";
   if (!clientId) throw new Error("VITE_GOOGLE_DESKTOP_CLIENT_ID is not set");
   if (!auth) throw new Error("Firebase auth not initialised");
 
@@ -59,6 +60,7 @@ export async function signInWithGoogleDesktop(): Promise<void> {
           body: new URLSearchParams({
             code,
             client_id: clientId,
+            client_secret: clientSecret,
             redirect_uri: redirectUri,
             grant_type: "authorization_code",
             code_verifier: verifier,
