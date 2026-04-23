@@ -23,11 +23,13 @@ interface ProjectStore {
   projects: Project[];
   activeProjectId: string | null;
   sync: SyncState;
+  syncing: boolean;
 
   // Sync control (called by authStore / settingsStore)
   enableCloudSync: (userId: string, cloudMode: boolean) => Promise<void>;
   disableCloudSync: () => void;
   setCloudMode: (enabled: boolean) => void;
+  syncNow: () => Promise<void>;
 
   // Project CRUD
   createProject: (name?: string) => Project;
@@ -91,18 +93,24 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     projects: initial,
     activeProjectId: initialActiveId,
     sync: { cloudEnabled: false, userId: null },
+    syncing: false,
 
     enableCloudSync: async (userId, cloudMode) => {
-      set({ sync: { cloudEnabled: cloudMode, userId } });
-      if (!cloudMode || !firebaseEnabled) return;
+      set({ sync: { cloudEnabled: cloudMode, userId }, syncing: true });
+      if (!firebaseEnabled) { set({ syncing: false }); return; }
 
-      // Merge cloud + local projects
-      const cloud = await fetchCloudProjects(userId).catch(() => [] as Project[]);
-      const local = get().projects;
-      const merged = mergeProjects(cloud, local);
-
-      persistLocal(merged);
-      set({ projects: merged, activeProjectId: get().activeProjectId ?? merged[0]?.id ?? null });
+      try {
+        // Always fetch + merge on sign-in so local and cloud are in sync
+        const cloud = await fetchCloudProjects(userId).catch(() => [] as Project[]);
+        const local = get().projects;
+        const merged = mergeProjects(cloud, local);
+        persistLocal(merged);
+        // Push merged state back to cloud
+        await Promise.all(merged.map((p) => upsertCloudProject(userId, p))).catch(console.error);
+        set({ projects: merged, activeProjectId: get().activeProjectId ?? merged[0]?.id ?? null });
+      } finally {
+        set({ syncing: false });
+      }
     },
 
     disableCloudSync: () => {
@@ -112,9 +120,26 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     setCloudMode: (enabled) => {
       const { userId } = get().sync;
       set({ sync: { cloudEnabled: enabled, userId } });
-      // If enabling cloud and already signed in, push local data up
       if (enabled && userId && firebaseEnabled) {
         get().projects.forEach((p) => upsertCloudProject(userId, p).catch(console.error));
+      }
+    },
+
+    syncNow: async () => {
+      const { sync, projects } = get();
+      if (!firebaseEnabled || !sync.userId) return;
+      set({ syncing: true });
+      try {
+        // Push all local projects up first, then pull and merge
+        await Promise.all(projects.map((p) => upsertCloudProject(sync.userId!, p)));
+        const cloud = await fetchCloudProjects(sync.userId);
+        const merged = mergeProjects(cloud, get().projects);
+        persistLocal(merged);
+        set({ projects: merged });
+      } catch (err) {
+        console.error("Sync failed:", err);
+      } finally {
+        set({ syncing: false });
       }
     },
 

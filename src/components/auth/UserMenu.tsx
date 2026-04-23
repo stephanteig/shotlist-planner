@@ -1,15 +1,15 @@
-import { LogOut, User, Cloud, HardDrive } from "lucide-react";
+import { LogOut, User, Cloud, HardDrive, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useProjectStore } from "@/store/projectStore";
 import { firebaseEnabled } from "@/lib/firebase";
 import { isTauri } from "@/lib/platform";
 import { useState, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
 
 export function UserMenu() {
   const { user, loading, signingIn, signInError, signInWithGoogle, signOut } = useAuthStore();
   const { settings } = useSettingsStore();
+  const { syncing, syncNow } = useProjectStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -75,15 +75,27 @@ export function UserMenu() {
             </div>
             <div className="text-xs text-muted-foreground truncate">{user.email}</div>
           </div>
+
           <div className="px-3 py-2 border-b border-border">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              {isCloud ? (
-                <><Cloud className="h-3.5 w-3.5 text-primary" /><span className="text-primary">Cloud sync aktiv</span></>
-              ) : (
-                <><HardDrive className="h-3.5 w-3.5" /><span>Lokal lagring</span></>
-              )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {isCloud ? (
+                  <><Cloud className="h-3.5 w-3.5 text-primary" /><span className="text-primary">Cloud sync aktiv</span></>
+                ) : (
+                  <><HardDrive className="h-3.5 w-3.5" /><span>Lokal lagring</span></>
+                )}
+              </div>
+              <button
+                onClick={async () => { await syncNow(); }}
+                disabled={syncing}
+                title="Synkroniser nå"
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+              </button>
             </div>
           </div>
+
           <button
             onClick={() => { signOut(); setOpen(false); }}
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
