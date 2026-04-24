@@ -99,4 +99,22 @@ describe("API routes", () => {
     const res = await req("PUT", "/api/projects/p1", token, { id: "different" });
     expect(res.status).toBe(400);
   });
+
+  it("400 on malformed JSON body", async () => {
+    const token = await tokenFor("u1");
+    const res = await app.fetch(
+      new Request("http://localhost/api/projects/p1", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: "{not json",
+      })
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("404 JSON on unknown api path (not SPA HTML)", async () => {
+    const res = await req("GET", "/api/nope", await tokenFor("u1"));
+    expect(res.status).toBe(404);
+    expect(res.headers.get("content-type")).toMatch(/json/);
+  });
 });

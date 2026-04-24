@@ -7,7 +7,7 @@ export type AppEnv = { Variables: { uid: string } };
 export function authMiddleware(verifier: Verifier): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const header = c.req.header("Authorization") ?? "";
-    const match = header.match(/^Bearer (.+)$/);
+    const match = header.match(/^Bearer\s+(\S+)$/);
     if (!match) return c.json({ error: "Missing bearer token" }, 401);
     try {
       const claims = await verifier.verify(match[1]);
@@ -51,6 +51,8 @@ export function mountApiRoutes(app: Hono, verifier: Verifier, store: BlobStore):
     await deleteUserProject(store, uid, id);
     return c.body(null, 204);
   });
+
+  api.all("*", (c) => c.json({ error: "Not found" }, 404));
 
   app.route("/api", api);
 }
