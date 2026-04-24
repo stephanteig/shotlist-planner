@@ -17,7 +17,7 @@ export function loadEnv(): Config {
     firebaseProjectId: required("FIREBASE_PROJECT_ID"),
     storageAccountName: required("STORAGE_ACCOUNT_NAME"),
     blobContainerName: required("BLOB_CONTAINER_NAME"),
-    azuriteConnection: process.env.AZURITE_CONNECTION,
-    port: Number(process.env.PORT ?? "8080"),
+    azuriteConnection: process.env.AZURITE_CONNECTION || undefined,
+    port: Number(process.env.PORT || "8080"),
   };
 }

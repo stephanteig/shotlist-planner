@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { loadEnv } from "../env";
 
 const REQUIRED = ["FIREBASE_PROJECT_ID", "STORAGE_ACCOUNT_NAME", "BLOB_CONTAINER_NAME"];
@@ -7,9 +7,9 @@ describe("loadEnv", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    for (const k of REQUIRED) delete process.env[k];
-    delete process.env.AZURITE_CONNECTION;
-    delete process.env.PORT;
+    for (const k of REQUIRED) process.env[k] = "";
+    process.env.AZURITE_CONNECTION = "";
+    process.env.PORT = "";
   });
 
   afterEach(() => {
