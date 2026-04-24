@@ -10,6 +10,9 @@ export function createBlobStore(opts: {
   accountName?: string;
   container: string;
 }): BlobStore {
+  if (!opts.connectionString && !opts.accountName) {
+    throw new Error("createBlobStore: provide connectionString or accountName");
+  }
   const service = opts.connectionString
     ? BlobServiceClient.fromConnectionString(opts.connectionString)
     : new BlobServiceClient(
