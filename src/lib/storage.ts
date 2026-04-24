@@ -68,7 +68,10 @@ export function exportProject(project: Project): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const slug = (project.meta.client || project.name).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const slug = (project.meta.client || project.name)
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
   const date = project.meta.date || new Date().toISOString().slice(0, 10);
   a.href = url;
   a.download = `${slug}-${date}.swshot`;

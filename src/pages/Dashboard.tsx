@@ -1,21 +1,37 @@
-import { useNavigate } from "react-router-dom";
-import { Plus, Film, Calendar, Users, CheckCircle2, Folder, Trash2, Clapperboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useProjectStore } from "@/store/projectStore";
-import { countShots, formatDateNO } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { countShots, formatDateNO } from "@/lib/utils";
+import { useProjectStore } from "@/store/projectStore";
 import type { Project } from "@/types";
+import {
+  Calendar,
+  CheckCircle2,
+  Clapperboard,
+  Film,
+  Folder,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string | number; sub?: string }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: { icon: any; label: string; value: string | number; sub?: string }) {
   return (
     <Card>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{label}</span>
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+            {label}
+          </span>
           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
             <Icon className="h-4 w-4 text-primary" />
           </div>
@@ -27,7 +43,11 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string;
   );
 }
 
-function ProjectCard({ project, onOpen, onDelete }: { project: Project; onOpen: () => void; onDelete: () => void }) {
+function ProjectCard({
+  project,
+  onOpen,
+  onDelete,
+}: { project: Project; onOpen: () => void; onDelete: () => void }) {
   const { total, done, pct } = countShots(project.sections);
   const dateStr = project.meta.date ? formatDateNO(project.meta.date) : null;
 
@@ -47,7 +67,10 @@ function ProjectCard({ project, onOpen, onDelete }: { project: Project; onOpen: 
             )}
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 flex items-center justify-center rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -79,7 +102,9 @@ function ProjectCard({ project, onOpen, onDelete }: { project: Project; onOpen: 
         {total > 0 ? (
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">{done}/{total} shots</span>
+              <span className="text-xs text-muted-foreground">
+                {done}/{total} shots
+              </span>
               <span className="text-xs font-medium text-foreground">{pct}%</span>
             </div>
             <Progress value={pct} className="h-1" />
@@ -164,7 +189,9 @@ export function Dashboard() {
             icon={CheckCircle2}
             label="Shots fullført"
             value={totalDone}
-            sub={totalShots > 0 ? `${Math.round((totalDone / totalShots) * 100)}% totalt` : undefined}
+            sub={
+              totalShots > 0 ? `${Math.round((totalDone / totalShots) * 100)}% totalt` : undefined
+            }
           />
           <StatCard icon={Calendar} label="Kommende" value={upcoming} sub="planlagte shoots" />
         </div>

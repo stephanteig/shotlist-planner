@@ -4,11 +4,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tauri dev",
-    "build": "tauri build",
+    "dev": "docker compose up",
+    "dev:web": "vite",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:all": "concurrently -n vite,server \"npm:dev:web\" \"npm:dev:server\"",
     "vite:dev": "vite",
-    "vite:build": "tsc && vite build",
-    "tauri": "tauri"
+    "vite:build": "vite build",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build": "npm run build:server && npm run vite:build",
+    "start": "node dist/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "biome check . && tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
+    "check:fix": "biome check --apply . && tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@azure/identity": "^4.13.1",

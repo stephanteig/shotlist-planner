@@ -1,13 +1,13 @@
-import { Outlet, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { Titlebar } from "./Titlebar";
-import { Sidebar } from "./Sidebar";
 import { ToastContainer, useToast } from "@/components/ui/toast";
+import { isTauri } from "@/lib/platform";
+import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import { useAuthStore } from "@/store/authStore";
-import { isTauri } from "@/lib/platform";
 import type { User } from "firebase/auth";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { Titlebar } from "./Titlebar";
 
 export function AppShell() {
   const { toasts, removeToast } = useToast();
@@ -19,7 +19,9 @@ export function AppShell() {
   const activeProject = getActiveProject();
 
   // Apply appearance settings on mount
-  useEffect(() => { applyToDOM(); }, [applyToDOM]);
+  useEffect(() => {
+    applyToDOM();
+  }, [applyToDOM]);
 
   // Wire auth callbacks so login/logout triggers cloud sync
   useEffect(() => {

@@ -1,7 +1,7 @@
+import { auth } from "@/lib/firebase";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
 function b64url(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))

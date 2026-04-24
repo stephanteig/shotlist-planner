@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import type { Project, Row, Section } from "@/types";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -47,7 +47,20 @@ export function formatDateNO(dateStr: string): string {
   if (!dateStr) return "";
   const d = new Date(dateStr + "T00:00:00");
   const days = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
-  const months = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
+  const months = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "mai",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "okt",
+    "nov",
+    "des",
+  ];
   return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
@@ -81,5 +94,8 @@ export function cycleColor(current: string, colors: readonly string[]): string {
 }
 
 export function slugify(str: string): string {
-  return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
 }

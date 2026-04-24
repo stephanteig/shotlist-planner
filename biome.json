@@ -1,0 +1,30 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": {
+    "ignore": ["dist/**", "node_modules/**", "src-tauri/target/**", "pages-repo/**"]
+  },
+  "organizeImports": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": { "useButtonType": "warn" },
+      "correctness": { "useExhaustiveDependencies": "warn" },
+      "complexity": { "noForEach": "warn" },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useTemplate": "warn"
+      },
+      "suspicious": { "noExplicitAny": "warn" }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "double", "trailingCommas": "es5" }
+  }
+}

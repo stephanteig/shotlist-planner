@@ -1,35 +1,39 @@
-const CACHE = 'shotlist-v1';
+const CACHE = "shotlist-v1";
 const ASSETS = [
-  '/shotlist-planner/',
-  '/shotlist-planner/index.html',
-  '/shotlist-planner/manifest.json',
-  '/shotlist-planner/icons/icon-192.png',
-  '/shotlist-planner/icons/icon-512.png',
-  '/shotlist-planner/icons/apple-touch-icon.png',
+  "/shotlist-planner/",
+  "/shotlist-planner/index.html",
+  "/shotlist-planner/manifest.json",
+  "/shotlist-planner/icons/icon-192.png",
+  "/shotlist-planner/icons/icon-512.png",
+  "/shotlist-planner/icons/apple-touch-icon.png",
 ];
 
-self.addEventListener('install', e => {
+self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', e => {
+self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+self.addEventListener("fetch", (e) => {
+  if (e.request.method !== "GET") return;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const network = fetch(e.request).then(res => {
+    caches.match(e.request).then((cached) => {
+      const network = fetch(e.request).then((res) => {
         if (res.ok) {
           const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          caches.open(CACHE).then((c) => c.put(e.request, clone));
         }
         return res;
       });

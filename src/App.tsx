@@ -1,8 +1,8 @@
-import { Routes, Route } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { Dashboard } from "@/pages/Dashboard";
 import { ProjectView } from "@/pages/ProjectView";
 import { Settings } from "@/pages/Settings";
+import { Route, Routes } from "react-router-dom";
 
 export function App() {
   return (

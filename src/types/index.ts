@@ -58,11 +58,11 @@ export const SECTION_COLORS = [
 ] as const;
 
 export const ACCENT_COLORS: Record<AccentColor, { label: string; hex: string }> = {
-  blue:   { label: "Blue",   hex: "#3b82f6" },
+  blue: { label: "Blue", hex: "#3b82f6" },
   purple: { label: "Purple", hex: "#8b5cf6" },
-  teal:   { label: "Teal",   hex: "#14b8a6" },
+  teal: { label: "Teal", hex: "#14b8a6" },
   orange: { label: "Orange", hex: "#f97316" },
-  rose:   { label: "Rose",   hex: "#f43f5e" },
+  rose: { label: "Rose", hex: "#f43f5e" },
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {

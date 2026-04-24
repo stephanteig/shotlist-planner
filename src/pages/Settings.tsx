@@ -1,16 +1,16 @@
-import { Monitor, Moon, Sun, Check, Cloud, HardDrive, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSettingsStore } from "@/store/settingsStore";
-import { useAuthStore } from "@/store/authStore";
-import { ACCENT_COLORS } from "@/types";
-import type { Theme, FontSize, AccentColor } from "@/types";
-import { cn } from "@/lib/utils";
-import { isTauri } from "@/lib/platform";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { firebaseEnabled } from "@/lib/firebase";
+import { isTauri } from "@/lib/platform";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import { useSettingsStore } from "@/store/settingsStore";
+import { ACCENT_COLORS } from "@/types";
+import type { AccentColor, FontSize, Theme } from "@/types";
+import { Check, Cloud, HardDrive, LogIn, Monitor, Moon, Sun } from "lucide-react";
 
 const THEMES: Array<{ value: Theme; label: string; icon: any }> = [
   { value: "dark", label: "Dark", icon: Moon },
@@ -24,7 +24,11 @@ const FONT_SIZES: Array<{ value: FontSize; label: string; description: string }>
   { value: "large", label: "Large", description: "112.5%" },
 ];
 
-function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+function SettingRow({
+  label,
+  description,
+  children,
+}: { label: string; description?: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-6 py-4">
       <div className="flex-1 min-w-0">
@@ -37,7 +41,15 @@ function SettingRow({ label, description, children }: { label: string; descripti
 }
 
 export function Settings() {
-  const { settings, setTheme, setAccentColor, setFontSize, setCompact, setWindowOpacity, setStorageMode } = useSettingsStore();
+  const {
+    settings,
+    setTheme,
+    setAccentColor,
+    setFontSize,
+    setCompact,
+    setWindowOpacity,
+    setStorageMode,
+  } = useSettingsStore();
   const { user, signInWithGoogle, signOut } = useAuthStore();
   const isDesktop = isTauri();
 
@@ -69,7 +81,10 @@ export function Settings() {
                   </Button>
                 </SettingRow>
               ) : (
-                <SettingRow label="Ikke innlogget" description="Logg inn med Google for å aktivere cloud sync">
+                <SettingRow
+                  label="Ikke innlogget"
+                  description="Logg inn med Google for å aktivere cloud sync"
+                >
                   <Button size="sm" onClick={signInWithGoogle} className="gap-1.5">
                     <LogIn className="h-3.5 w-3.5" />
                     Logg inn med Google
@@ -102,7 +117,10 @@ export function Settings() {
                     </button>
                     <button
                       onClick={() => {
-                        if (!user) { signInWithGoogle(); return; }
+                        if (!user) {
+                          signInWithGoogle();
+                          return;
+                        }
                         setStorageMode("cloud");
                       }}
                       disabled={!user}
@@ -121,7 +139,10 @@ export function Settings() {
               )}
 
               {!isDesktop && user && (
-                <SettingRow label="Cloud sync" description="Alle prosjekter synkroniseres automatisk til skyen">
+                <SettingRow
+                  label="Cloud sync"
+                  description="Alle prosjekter synkroniseres automatisk til skyen"
+                >
                   <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
                     <Cloud className="h-3.5 w-3.5" /> Aktiv
                   </span>
@@ -158,9 +179,16 @@ export function Settings() {
               </div>
             </SettingRow>
 
-            <SettingRow label="Aksentfarge" description="Velg en primærfarge for knapper og aktive tilstander">
+            <SettingRow
+              label="Aksentfarge"
+              description="Velg en primærfarge for knapper og aktive tilstander"
+            >
               <div className="flex gap-2">
-                {(Object.entries(ACCENT_COLORS) as Array<[AccentColor, { label: string; hex: string }]>).map(([key, { label, hex }]) => (
+                {(
+                  Object.entries(ACCENT_COLORS) as Array<
+                    [AccentColor, { label: string; hex: string }]
+                  >
+                ).map(([key, { label, hex }]) => (
                   <button
                     key={key}
                     onClick={() => setAccentColor(key)}
@@ -199,17 +227,23 @@ export function Settings() {
               </div>
             </SettingRow>
 
-            <SettingRow label="Kompakt modus" description="Reduserer padding og mellomrom i hele appen">
+            <SettingRow
+              label="Kompakt modus"
+              description="Reduserer padding og mellomrom i hele appen"
+            >
               <Switch checked={settings.compact} onCheckedChange={setCompact} />
             </SettingRow>
 
             {isDesktop && (
-              <SettingRow
-                label="Vindusgjennomsiktighet"
-                description={`${settings.windowOpacity}%`}
-              >
+              <SettingRow label="Vindusgjennomsiktighet" description={`${settings.windowOpacity}%`}>
                 <div className="w-40">
-                  <Slider min={70} max={100} step={1} value={[settings.windowOpacity]} onValueChange={([v]) => setWindowOpacity(v)} />
+                  <Slider
+                    min={70}
+                    max={100}
+                    step={1}
+                    value={[settings.windowOpacity]}
+                    onValueChange={([v]) => setWindowOpacity(v)}
+                  />
                 </div>
               </SettingRow>
             )}
@@ -223,17 +257,24 @@ export function Settings() {
             <CardDescription>Versjonsinformasjon og snarveier</CardDescription>
           </CardHeader>
           <CardContent className="divide-y divide-border space-y-0">
-            <SettingRow label="Versjon"><span className="text-sm font-mono text-muted-foreground">0.1.0</span></SettingRow>
-            <SettingRow label="Databeskyttelse" description="All data lagres lokalt — cloud sync kun når aktivert">
+            <SettingRow label="Versjon">
+              <span className="text-sm font-mono text-muted-foreground">0.1.0</span>
+            </SettingRow>
+            <SettingRow
+              label="Databeskyttelse"
+              description="All data lagres lokalt — cloud sync kun når aktivert"
+            >
               <span className="text-xs text-emerald-400 font-medium">Privat</span>
             </SettingRow>
             <SettingRow label="Tastatursnarveier" description="Hurtigtaster">
               <div className="flex flex-col gap-1 text-right">
                 <span className="text-xs text-muted-foreground">
-                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">F</kbd> Forhåndsvisning
+                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">F</kbd>{" "}
+                  Forhåndsvisning
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">Enter</kbd> Ny rad
+                  <kbd className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">Enter</kbd> Ny
+                  rad
                 </span>
               </div>
             </SettingRow>
@@ -249,14 +290,21 @@ export function Settings() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-foreground">Nullstill alle innstillinger</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Tilbakestiller tema, farger og layoutvalg</div>
+                <div className="text-sm font-medium text-foreground">
+                  Nullstill alle innstillinger
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Tilbakestiller tema, farger og layoutvalg
+                </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 className="border-destructive/40 text-destructive hover:bg-destructive/10"
-                onClick={() => { localStorage.removeItem("markr-settings"); window.location.reload(); }}
+                onClick={() => {
+                  localStorage.removeItem("markr-settings");
+                  window.location.reload();
+                }}
               >
                 Nullstill
               </Button>

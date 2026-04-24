@@ -1,22 +1,33 @@
-import { create } from "zustand";
-import type { Project, Section, Row, RowType, ProjectMeta } from "@/types";
-import { SECTION_COLORS } from "@/types";
-import { loadProjects, saveProjects } from "@/lib/storage";
-import { makeProject, makeSection, makeRow, cycleColor } from "@/lib/utils";
-import { upsertCloudProject, deleteCloudProject, fetchCloudProjects, mergeProjects } from "@/lib/firestore";
 import { firebaseEnabled } from "@/lib/firebase";
+import {
+  deleteCloudProject,
+  fetchCloudProjects,
+  mergeProjects,
+  upsertCloudProject,
+} from "@/lib/firestore";
+import { loadProjects, saveProjects } from "@/lib/storage";
+import { cycleColor, makeProject, makeRow, makeSection } from "@/lib/utils";
+import type { Project, ProjectMeta, Row, RowType, Section } from "@/types";
+import { SECTION_COLORS } from "@/types";
+import { create } from "zustand";
 
 // Debounce helper — debounces per projectId
 const cloudTimers = new Map<string, ReturnType<typeof setTimeout>>();
 function scheduleCloudWrite(projectId: string, fn: () => void, delay = 1200) {
   const existing = cloudTimers.get(projectId);
   if (existing) clearTimeout(existing);
-  cloudTimers.set(projectId, setTimeout(() => { fn(); cloudTimers.delete(projectId); }, delay));
+  cloudTimers.set(
+    projectId,
+    setTimeout(() => {
+      fn();
+      cloudTimers.delete(projectId);
+    }, delay)
+  );
 }
 
 interface SyncState {
-  cloudEnabled: boolean;  // cloud mode is on in settings
-  userId: string | null;  // set when user is signed in
+  cloudEnabled: boolean; // cloud mode is on in settings
+  userId: string | null; // set when user is signed in
 }
 
 interface ProjectStore {
@@ -97,7 +108,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
 
     enableCloudSync: async (userId, cloudMode) => {
       set({ sync: { cloudEnabled: cloudMode, userId }, syncing: true });
-      if (!firebaseEnabled) { set({ syncing: false }); return; }
+      if (!firebaseEnabled) {
+        set({ syncing: false });
+        return;
+      }
 
       try {
         // Always fetch + merge on sign-in so local and cloud are in sync
@@ -157,7 +171,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
       if (firebaseEnabled && sync.cloudEnabled && sync.userId) {
         deleteCloudProject(sync.userId, id).catch(console.error);
       }
-      const activeProjectId = get().activeProjectId === id ? (projects[0]?.id ?? null) : get().activeProjectId;
+      const activeProjectId =
+        get().activeProjectId === id ? (projects[0]?.id ?? null) : get().activeProjectId;
       persistLocal(projects);
       set({ projects, activeProjectId });
     },
@@ -165,7 +180,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     setActiveProject: (id) => set({ activeProjectId: id }),
 
     updateProjectMeta: (id, meta) => {
-      const projects = updateProject(get().projects, id, (p) => touch({ ...p, meta: { ...p.meta, ...meta } }));
+      const projects = updateProject(get().projects, id, (p) =>
+        touch({ ...p, meta: { ...p.meta, ...meta } })
+      );
       persist(projects, id);
       set({ projects });
     },
@@ -190,31 +207,51 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
 
     addSection: (projectId, name) => {
       const section = makeSection(name, SECTION_COLORS[0]);
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: [...p.sections, section] }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({ ...p, sections: [...p.sections, section] })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     deleteSection: (projectId, sectionId) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.filter((s) => s.id !== sectionId) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({ ...p, sections: p.sections.filter((s) => s.id !== sectionId) })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     updateSectionName: (projectId, sectionId, name) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, name } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({ ...p, sections: p.sections.map((s) => (s.id === sectionId ? { ...s, name } : s)) })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     toggleCollapse: (projectId, sectionId) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, collapsed: !s.collapsed } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId ? { ...s, collapsed: !s.collapsed } : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     cycleColor: (projectId, sectionId) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, color: cycleColor(s.color, SECTION_COLORS) } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId ? { ...s, color: cycleColor(s.color, SECTION_COLORS) } : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
     },
@@ -227,32 +264,69 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
 
     addRow: (projectId, sectionId, type) => {
       const row = makeRow(type);
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, rows: [...s.rows, row] } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId ? { ...s, rows: [...s.rows, row] } : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
       return row.id;
     },
 
     deleteRow: (projectId, sectionId, rowId) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, rows: s.rows.filter((r) => r.id !== rowId) } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId ? { ...s, rows: s.rows.filter((r) => r.id !== rowId) } : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     updateRow: (projectId, sectionId, rowId, text) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, rows: s.rows.map((r) => r.id === rowId ? { ...r, text } : r) } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId
+              ? { ...s, rows: s.rows.map((r) => (r.id === rowId ? { ...r, text } : r)) }
+              : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     toggleCheck: (projectId, sectionId, rowId) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, rows: s.rows.map((r) => r.id === rowId ? { ...r, checked: !r.checked } : r) } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({
+          ...p,
+          sections: p.sections.map((s) =>
+            s.id === sectionId
+              ? {
+                  ...s,
+                  rows: s.rows.map((r) => (r.id === rowId ? { ...r, checked: !r.checked } : r)),
+                }
+              : s
+          ),
+        })
+      );
       persist(projects, projectId);
       set({ projects });
     },
 
     reorderRows: (projectId, sectionId, rows) => {
-      const projects = updateProject(get().projects, projectId, (p) => touch({ ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, rows } : s) }));
+      const projects = updateProject(get().projects, projectId, (p) =>
+        touch({ ...p, sections: p.sections.map((s) => (s.id === sectionId ? { ...s, rows } : s)) })
+      );
       persist(projects, projectId);
       set({ projects });
     },

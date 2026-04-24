@@ -1,13 +1,6 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  setDoc,
-  deleteDoc,
-  serverTimestamp,
-} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Project } from "@/types";
+import { collection, deleteDoc, doc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
 
 function projectsRef(userId: string) {
   if (!db) throw new Error("Firestore not initialised");
