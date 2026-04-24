@@ -47,4 +47,12 @@ describe("loadEnv", () => {
     process.env.PORT = "3000";
     expect(loadEnv().port).toBe(3000);
   });
+
+  it("throws on non-numeric PORT", () => {
+    process.env.FIREBASE_PROJECT_ID = "markr-dev";
+    process.env.STORAGE_ACCOUNT_NAME = "stmarkrdev";
+    process.env.BLOB_CONTAINER_NAME = "projects";
+    process.env.PORT = "abc";
+    expect(() => loadEnv()).toThrow(/Invalid PORT/);
+  });
 });
