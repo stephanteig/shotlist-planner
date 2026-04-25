@@ -1,10 +1,10 @@
-import { firebaseEnabled } from "@/lib/firebase";
 import {
   deleteCloudProject,
   fetchCloudProjects,
   mergeProjects,
   upsertCloudProject,
-} from "@/lib/firestore";
+} from "@/lib/api";
+import { firebaseEnabled } from "@/lib/firebase";
 import { loadProjects, saveProjects } from "@/lib/storage";
 import { cycleColor, makeProject, makeRow, makeSection } from "@/lib/utils";
 import type { Project, ProjectMeta, Row, RowType, Section } from "@/types";
