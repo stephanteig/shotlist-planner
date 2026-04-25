@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "docker compose up",
-    "dev:web": "vite",
+    "dev": "docker compose --env-file .env.local up",
+    "dev:web": "vite --host",
     "dev:server": "tsx watch src/server/index.ts",
     "dev:all": "concurrently -n vite,server \"npm:dev:web\" \"npm:dev:server\"",
     "vite:dev": "vite",

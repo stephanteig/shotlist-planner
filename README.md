@@ -100,20 +100,24 @@ src-tauri/
 git clone https://github.com/stephanteig/shotlist-planner.git
 cd shotlist-planner
 npm install
-cp .env.example .env.local   # fill in your values
-npm run tauri dev
+cp .env.example .env.local   # fill in Firebase values
+docker compose up             # runs Azurite + Vite (5173) + Hono (8080)
 ```
 
-**Troubleshooting:**
-- Port in use: `kill $(lsof -ti:5173)`
-- Cargo.lock version error: `rm src-tauri/Cargo.lock`
-- node_modules broken: `rm -rf node_modules && npm install`
+Open http://localhost:5173 and sign in with Google. Data persists in the
+local Azurite container; `docker compose down -v` resets everything.
 
-### Web-only (no Rust)
+### Desktop development (Tauri)
 
 ```bash
-npm run vite:dev
+npm run tauri:dev
 ```
+
+Desktop dev requires Rust stable (`rustup update`) and Xcode Command Line
+Tools on macOS. The Tauri window loads from Vite's dev server — run
+`docker compose up` first so the backend is reachable, or set
+`VITE_API_URL=http://localhost:8080` in `.env.local` to talk to the
+locally-running Hono.
 
 ---
 
