@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Start Azurite
+        run: |
+          docker run -d --name azurite -p 10000:10000 \
+            mcr.microsoft.com/azure-storage/azurite \
+            azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+          # Wait for Azurite to be ready
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -s -o /dev/null http://127.0.0.1:10000/devstoreaccount1; then
+              echo "Azurite ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Azurite did not start"; exit 1
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
