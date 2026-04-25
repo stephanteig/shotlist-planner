@@ -1,22 +1,14 @@
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Film,
-  Settings,
-  Clapperboard,
-  FolderOpen,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProjectStore } from "@/store/projectStore";
+import { Clapperboard, Film, FolderOpen, LayoutDashboard, Settings } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/project", icon: Film, label: "Editor" },
 ];
 
-const NAV_BOTTOM = [
-  { to: "/settings", icon: Settings, label: "Settings" },
-];
+const NAV_BOTTOM = [{ to: "/settings", icon: Settings, label: "Settings" }];
 
 export function Sidebar() {
   const { projects, activeProjectId, setActiveProject } = useProjectStore();

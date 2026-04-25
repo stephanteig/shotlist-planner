@@ -1,5 +1,5 @@
-import type { Section } from "@/types";
 import { uid } from "@/lib/utils";
+import type { Section } from "@/types";
 
 function s(name: string, color: string, rows: Array<[string, string]>): Section {
   return {
@@ -16,7 +16,10 @@ function s(name: string, color: string, rows: Array<[string, string]>): Section 
   };
 }
 
-export const TEMPLATES: Record<string, { label: string; emoji: string; sections: () => Section[] }> = {
+export const TEMPLATES: Record<
+  string,
+  { label: string; emoji: string; sections: () => Section[] }
+> = {
   bolig: {
     label: "Boligfoto",
     emoji: "🏠",

@@ -1,5 +1,5 @@
-import { Minus, Square, X, Clapperboard } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { Clapperboard, Minus, Square, X } from "lucide-react";
 
 interface TitlebarProps {
   title?: string;
@@ -42,7 +42,10 @@ export function Titlebar({ title }: TitlebarProps) {
       </div>
 
       {/* Center — menu bar */}
-      <div className="flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2" data-tauri-drag-region>
+      <div
+        className="flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2"
+        data-tauri-drag-region
+      >
         {["App", "File", "Edit", "View"].map((item) => (
           <button
             key={item}

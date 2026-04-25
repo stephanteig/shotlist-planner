@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 interface ToastProps {
   message: string;
@@ -45,12 +45,17 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
 let toastEmitter: ((msg: string, type?: "success" | "error" | "info") => void) | null = null;
 
 export function useToast() {
-  const [toasts, setToasts] = React.useState<Array<{ id: string; message: string; type?: "success" | "error" | "info" }>>([]);
+  const [toasts, setToasts] = React.useState<
+    Array<{ id: string; message: string; type?: "success" | "error" | "info" }>
+  >([]);
 
-  const addToast = React.useCallback((message: string, type: "success" | "error" | "info" = "success") => {
-    const id = `${Date.now()}-${Math.random()}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
-  }, []);
+  const addToast = React.useCallback(
+    (message: string, type: "success" | "error" | "info" = "success") => {
+      const id = `${Date.now()}-${Math.random()}`;
+      setToasts((prev) => [...prev, { id, message, type }]);
+    },
+    []
+  );
 
   const removeToast = React.useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -58,7 +63,9 @@ export function useToast() {
 
   React.useEffect(() => {
     toastEmitter = addToast;
-    return () => { toastEmitter = null; };
+    return () => {
+      toastEmitter = null;
+    };
   }, [addToast]);
 
   return { toasts, addToast, removeToast };

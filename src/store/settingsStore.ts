@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import type { AppSettings, AccentColor, FontSize, Theme, StorageMode } from "@/types";
-import { DEFAULT_SETTINGS } from "@/types";
 import { loadSettings, saveSettings } from "@/lib/storage";
+import type { AccentColor, AppSettings, FontSize, StorageMode, Theme } from "@/types";
+import { DEFAULT_SETTINGS } from "@/types";
+import { create } from "zustand";
 
 interface SettingsStore {
   settings: AppSettings;
@@ -16,7 +16,10 @@ interface SettingsStore {
 
 function applySettings(settings: AppSettings) {
   const root = document.documentElement;
-  if (settings.theme === "dark" || (settings.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+  if (
+    settings.theme === "dark" ||
+    (settings.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  ) {
     root.classList.add("dark");
   } else {
     root.classList.remove("dark");
@@ -24,10 +27,15 @@ function applySettings(settings: AppSettings) {
   root.setAttribute("data-accent", settings.accentColor === "blue" ? "" : settings.accentColor);
   root.setAttribute("data-font-size", settings.fontSize);
   root.setAttribute("data-compact", String(settings.compact));
-  document.body.style.opacity = settings.windowOpacity === 100 ? "" : String(settings.windowOpacity / 100);
+  document.body.style.opacity =
+    settings.windowOpacity === 100 ? "" : String(settings.windowOpacity / 100);
 }
 
-function update(get: () => SettingsStore, set: (s: Partial<SettingsStore>) => void, patch: Partial<AppSettings>) {
+function update(
+  get: () => SettingsStore,
+  set: (s: Partial<SettingsStore>) => void,
+  patch: Partial<AppSettings>
+) {
   const settings = { ...get().settings, ...patch };
   set({ settings });
   saveSettings(settings);

@@ -1,48 +1,79 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/components/ui/toast";
+import { exportProject, parseImportFile } from "@/lib/storage";
+import { TEMPLATES } from "@/lib/templates";
+import { countShots, formatProjectPreview } from "@/lib/utils";
+import { useProjectStore } from "@/store/projectStore";
+import { SECTION_COLORS } from "@/types";
+import type { Row, RowType, Section } from "@/types";
 import {
   DndContext,
-  closestCenter,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arrayMove,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  Plus, GripVertical, Trash2, ChevronDown, ChevronRight,
-  Camera, FileText, Quote, Download, Upload, Copy,
-  Eye, EyeOff, LayoutTemplate, Check, X, RefreshCw,
+  Camera,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  GripVertical,
   Info,
+  LayoutTemplate,
+  Plus,
+  Quote,
+  RefreshCw,
+  Trash2,
+  Upload,
+  X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/toast";
-import { useProjectStore } from "@/store/projectStore";
-import { countShots, formatProjectPreview } from "@/lib/utils";
-import { SECTION_COLORS } from "@/types";
-import { TEMPLATES } from "@/lib/templates";
-import { exportProject, parseImportFile } from "@/lib/storage";
-import type { Row, RowType, Section } from "@/types";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ── Row component ──────────────────────────────────────────────────────────
 
 const ROW_CONFIG: Record<RowType, { icon: any; badge: any; placeholder: string; color: string }> = {
-  shot:  { icon: Camera,   badge: "shot",    placeholder: "Beskriv shotet...",     color: "text-primary" },
-  note:  { icon: FileText, badge: "note",    placeholder: "Merknad eller logistikk...", color: "text-amber-400" },
-  quote: { icon: Quote,    badge: "quote",   placeholder: "Sitat eller spørsmål...", color: "text-purple-400" },
+  shot: { icon: Camera, badge: "shot", placeholder: "Beskriv shotet...", color: "text-primary" },
+  note: {
+    icon: FileText,
+    badge: "note",
+    placeholder: "Merknad eller logistikk...",
+    color: "text-amber-400",
+  },
+  quote: {
+    icon: Quote,
+    badge: "quote",
+    placeholder: "Sitat eller spørsmål...",
+    color: "text-purple-400",
+  },
 };
 
 interface SortableRowProps {
@@ -53,8 +84,9 @@ interface SortableRowProps {
 }
 
 function SortableRow({ row, shotNumber, projectId, sectionId }: SortableRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: row.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
+  });
   const { updateRow, deleteRow, toggleCheck } = useProjectStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const config = ROW_CONFIG[row.type];
@@ -72,14 +104,18 @@ function SortableRow({ row, shotNumber, projectId, sectionId }: SortableRowProps
     el.style.height = el.scrollHeight + "px";
   };
 
-  useEffect(() => { autoResize(); }, [row.text]);
+  useEffect(() => {
+    autoResize();
+  }, [row.text]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       // Trigger add row of same type — done via custom event
       const el = e.currentTarget;
-      el.dispatchEvent(new CustomEvent("row-enter", { bubbles: true, detail: { sectionId, type: row.type } }));
+      el.dispatchEvent(
+        new CustomEvent("row-enter", { bubbles: true, detail: { sectionId, type: row.type } })
+      );
     }
   };
 
@@ -126,7 +162,10 @@ function SortableRow({ row, shotNumber, projectId, sectionId }: SortableRowProps
         ref={textareaRef}
         data-selectable
         value={row.text}
-        onChange={(e) => { updateRow(projectId, sectionId, row.id, e.target.value); autoResize(); }}
+        onChange={(e) => {
+          updateRow(projectId, sectionId, row.id, e.target.value);
+          autoResize();
+        }}
         onKeyDown={handleKeyDown}
         placeholder={config.placeholder}
         rows={1}
@@ -156,11 +195,16 @@ interface SortableSectionProps {
 }
 
 function SortableSection({ section, projectId, shotOffset }: SortableSectionProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: section.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+  });
   const {
-    updateSectionName, deleteSection, toggleCollapse,
-    cycleColor: cycleCol, addRow, reorderRows,
+    updateSectionName,
+    deleteSection,
+    toggleCollapse,
+    cycleColor: cycleCol,
+    addRow,
+    reorderRows,
   } = useProjectStore();
 
   const style = {
@@ -206,7 +250,14 @@ function SortableSection({ section, projectId, shotOffset }: SortableSectionProp
   }
 
   return (
-    <div ref={(el) => { (setNodeRef as any)(el); (sectionRef as any).current = el; }} style={style} className="animate-fade-in">
+    <div
+      ref={(el) => {
+        (setNodeRef as any)(el);
+        (sectionRef as any).current = el;
+      }}
+      style={style}
+      className="animate-fade-in"
+    >
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         {/* Section header */}
         <div
@@ -249,7 +300,11 @@ function SortableSection({ section, projectId, shotOffset }: SortableSectionProp
             onClick={() => toggleCollapse(projectId, section.id)}
             className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
           >
-            {section.collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {section.collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </button>
 
           {/* Delete */}
@@ -264,8 +319,15 @@ function SortableSection({ section, projectId, shotOffset }: SortableSectionProp
         {/* Rows */}
         {!section.collapsed && (
           <div className="px-2 py-1">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleRowDragEnd}>
-              <SortableContext items={section.rows.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleRowDragEnd}
+            >
+              <SortableContext
+                items={section.rows.map((r) => r.id)}
+                strategy={verticalListSortingStrategy}
+              >
                 {section.rows.map((row) => (
                   <SortableRow
                     key={row.id}
@@ -304,7 +366,9 @@ function SortableSection({ section, projectId, shotOffset }: SortableSectionProp
 // ── Template dialog ────────────────────────────────────────────────────────
 
 function TemplateDialog({
-  open, onClose, onSelect,
+  open,
+  onClose,
+  onSelect,
 }: { open: boolean; onClose: () => void; onSelect: (key: string) => void }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -317,7 +381,10 @@ function TemplateDialog({
           {Object.entries(TEMPLATES).map(([key, tpl]) => (
             <button
               key={key}
-              onClick={() => { onSelect(key); onClose(); }}
+              onClick={() => {
+                onSelect(key);
+                onClose();
+              }}
               className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 text-left transition-colors"
             >
               <span className="text-xl">{tpl.emoji}</span>
@@ -345,7 +412,9 @@ function PreviewPanel({ project }: { project: any }) {
     <div className="flex flex-col h-full border-l border-border bg-sidebar">
       {/* Stats */}
       <div className="p-4 border-b border-border space-y-3">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statistikk</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          Statistikk
+        </h3>
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: "Shots", value: total },
@@ -372,7 +441,9 @@ function PreviewPanel({ project }: { project: any }) {
       {/* Preview text */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Forhåndsvisning</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Forhåndsvisning
+          </h3>
           <Button variant="ghost" size="icon-sm" onClick={handleCopy} title="Kopier">
             <Copy className="h-3.5 w-3.5" />
           </Button>
@@ -392,8 +463,13 @@ function PreviewPanel({ project }: { project: any }) {
 export function ProjectView() {
   const navigate = useNavigate();
   const {
-    getActiveProject, createProject, addSection, reorderSections,
-    updateProjectMeta, updateProjectName, importProject,
+    getActiveProject,
+    createProject,
+    addSection,
+    reorderSections,
+    updateProjectMeta,
+    updateProjectName,
+    importProject,
   } = useProjectStore();
   const [showPreview, setShowPreview] = useState(true);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -457,7 +533,13 @@ export function ProjectView() {
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "f" && !e.ctrlKey && !e.metaKey && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+    if (
+      e.key === "f" &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !(e.target instanceof HTMLInputElement) &&
+      !(e.target instanceof HTMLTextAreaElement)
+    ) {
       setShowPreview((v) => !v);
     }
   }, []);
@@ -514,7 +596,12 @@ export function ProjectView() {
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Button variant="ghost" size="sm" onClick={() => setShowTemplates(true)} className="gap-1.5 text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTemplates(true)}
+              className="gap-1.5 text-xs"
+            >
               <LayoutTemplate className="h-3.5 w-3.5" />
               Mal
             </Button>
@@ -553,14 +640,22 @@ export function ProjectView() {
                     <Plus className="h-4 w-4" />
                     Legg til scene
                   </Button>
-                  <Button variant="outline" onClick={() => setShowTemplates(true)} className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTemplates(true)}
+                    className="gap-2"
+                  >
                     <LayoutTemplate className="h-4 w-4" />
                     Velg mal
                   </Button>
                 </div>
               </div>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleSectionDragEnd}
+              >
                 <SortableContext
                   items={project.sections.map((s) => s.id)}
                   strategy={verticalListSortingStrategy}
@@ -599,7 +694,13 @@ export function ProjectView() {
       )}
 
       {/* Hidden file input */}
-      <input ref={fileInputRef} type="file" accept=".swshot,.json" onChange={handleFileChange} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".swshot,.json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
 
       {/* Template dialog */}
       <TemplateDialog

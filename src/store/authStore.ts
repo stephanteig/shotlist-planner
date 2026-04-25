@@ -1,13 +1,13 @@
-import { create } from "zustand";
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  type User,
-} from "firebase/auth";
 import { auth, firebaseEnabled } from "@/lib/firebase";
 import { isTauri } from "@/lib/platform";
+import {
+  GoogleAuthProvider,
+  type User,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  signInWithPopup,
+} from "firebase/auth";
+import { create } from "zustand";
 
 interface AuthStore {
   user: User | null;
@@ -52,7 +52,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signInWithGoogle: async () => {
     if (!firebaseEnabled || !auth) {
-      set({ signInError: `Firebase not initialised (firebaseEnabled=${firebaseEnabled}, auth=${!!auth})` });
+      set({
+        signInError: `Firebase not initialised (firebaseEnabled=${firebaseEnabled}, auth=${!!auth})`,
+      });
       return;
     }
     set({ signingIn: true, signInError: null });

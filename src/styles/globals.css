@@ -61,25 +61,51 @@
   }
 
   /* Font size variants */
-  [data-font-size="small"] { --font-scale: 0.875; }
-  [data-font-size="medium"] { --font-scale: 1; }
-  [data-font-size="large"] { --font-scale: 1.125; }
+  [data-font-size="small"] {
+    --font-scale: 0.875;
+  }
+  [data-font-size="medium"] {
+    --font-scale: 1;
+  }
+  [data-font-size="large"] {
+    --font-scale: 1.125;
+  }
 
   /* Compact mode */
-  [data-compact="true"] { --spacing-scale: 0.75; }
+  [data-compact="true"] {
+    --spacing-scale: 0.75;
+  }
 
   /* Accent color variants */
-  [data-accent="purple"] { --accent: var(--accent-purple); --primary: var(--accent-purple); --ring: var(--accent-purple); }
-  [data-accent="teal"]   { --accent: var(--accent-teal);   --primary: var(--accent-teal);   --ring: var(--accent-teal); }
-  [data-accent="orange"] { --accent: var(--accent-orange); --primary: var(--accent-orange); --ring: var(--accent-orange); }
-  [data-accent="rose"]   { --accent: var(--accent-rose);   --primary: var(--accent-rose);   --ring: var(--accent-rose); }
+  [data-accent="purple"] {
+    --accent: var(--accent-purple);
+    --primary: var(--accent-purple);
+    --ring: var(--accent-purple);
+  }
+  [data-accent="teal"] {
+    --accent: var(--accent-teal);
+    --primary: var(--accent-teal);
+    --ring: var(--accent-teal);
+  }
+  [data-accent="orange"] {
+    --accent: var(--accent-orange);
+    --primary: var(--accent-orange);
+    --ring: var(--accent-orange);
+  }
+  [data-accent="rose"] {
+    --accent: var(--accent-rose);
+    --primary: var(--accent-rose);
+    --ring: var(--accent-rose);
+  }
 
   * {
     @apply border-border;
     box-sizing: border-box;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
     overflow: hidden;
   }
@@ -94,15 +120,27 @@
   }
 
   /* Allow text selection in inputs and content areas */
-  input, textarea, [data-selectable] {
+  input,
+  textarea,
+  [data-selectable] {
     user-select: text;
   }
 
   /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
 }
 
 @layer utilities {

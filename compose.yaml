@@ -1,0 +1,32 @@
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: ["azurite-blob", "--blobHost", "0.0.0.0", "--skipApiVersionCheck"]
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite-data:/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env.local
+    environment:
+      FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID}
+      STORAGE_ACCOUNT_NAME: devstoreaccount1
+      BLOB_CONTAINER_NAME: projects
+      AZURITE_CONNECTION: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      PORT: "8080"
+    depends_on:
+      - azurite
+
+volumes:
+  azurite-data:

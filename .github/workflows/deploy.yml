@@ -1,0 +1,79 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
+env:
+  RESOURCE_GROUP: rg-markr
+  IMAGE_REPO: ghcr.io/${{ github.repository }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPO }}:${{ github.sha }}
+            ${{ env.IMAGE_REPO }}:latest
+          build-args: |
+            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      - name: Apply Bicep
+        run: |
+          az deployment group create \
+            --resource-group $RESOURCE_GROUP \
+            --template-file infra/main.bicep \
+            --parameters infra/parameters.json \
+            --parameters firebaseProjectId="${{ secrets.VITE_FIREBASE_PROJECT_ID }}" \
+            --parameters imageRef="${{ env.IMAGE_REPO }}:${{ github.sha }}" \
+            --parameters registryUsername="${{ vars.GHCR_USERNAME }}" \
+            --parameters registryPassword="${{ secrets.GHCR_PULL_TOKEN }}"
+
+      - name: Update Container App image
+        run: |
+          az containerapp update \
+            --name ca-markr \
+            --resource-group $RESOURCE_GROUP \
+            --image ${{ env.IMAGE_REPO }}:${{ github.sha }}
+
+      - name: Print app URL
+        run: |
+          URL=$(az containerapp show -n ca-markr -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Deployed to https://$URL"

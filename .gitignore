@@ -8,3 +8,7 @@ icon-source.png
 # Local env (Firebase secrets — never commit)
 .env.local
 .env.*.local
+
+# Bicep compiled output (regenerated on demand)
+infra/*.json.bak
+infra/main.json

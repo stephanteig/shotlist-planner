@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "identifier": "io.markr.app",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "../dist/client",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run vite:dev",
     "beforeBuildCommand": "npm run vite:build"

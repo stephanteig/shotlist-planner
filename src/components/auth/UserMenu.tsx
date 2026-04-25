@@ -1,10 +1,10 @@
-import { LogOut, User, Cloud, HardDrive, RefreshCw } from "lucide-react";
-import { useAuthStore } from "@/store/authStore";
-import { useSettingsStore } from "@/store/settingsStore";
-import { useProjectStore } from "@/store/projectStore";
 import { firebaseEnabled } from "@/lib/firebase";
 import { isTauri } from "@/lib/platform";
-import { useState, useRef, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import { useProjectStore } from "@/store/projectStore";
+import { useSettingsStore } from "@/store/settingsStore";
+import { Cloud, HardDrive, LogOut, RefreshCw, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export function UserMenu() {
   const { user, loading, signingIn, signInError, signInWithGoogle, signOut } = useAuthStore();
@@ -80,13 +80,21 @@ export function UserMenu() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {isCloud ? (
-                  <><Cloud className="h-3.5 w-3.5 text-primary" /><span className="text-primary">Cloud sync aktiv</span></>
+                  <>
+                    <Cloud className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-primary">Cloud sync aktiv</span>
+                  </>
                 ) : (
-                  <><HardDrive className="h-3.5 w-3.5" /><span>Lokal lagring</span></>
+                  <>
+                    <HardDrive className="h-3.5 w-3.5" />
+                    <span>Lokal lagring</span>
+                  </>
                 )}
               </div>
               <button
-                onClick={async () => { await syncNow(); }}
+                onClick={async () => {
+                  await syncNow();
+                }}
                 disabled={syncing}
                 title="Synkroniser nå"
                 className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
@@ -97,7 +105,10 @@ export function UserMenu() {
           </div>
 
           <button
-            onClick={() => { signOut(); setOpen(false); }}
+            onClick={() => {
+              signOut();
+              setOpen(false);
+            }}
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <LogOut className="h-4 w-4" />
