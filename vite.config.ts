@@ -25,6 +25,8 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_"],
   build: {
+    outDir: "dist/client",
+    emptyOutDir: true,
     target: ["es2021", "chrome100", "safari15"],
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_DEBUG,
