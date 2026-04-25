@@ -91,8 +91,9 @@ src-tauri/
 ### Prerequisites
 
 - Node.js 20+
-- Rust stable — `rustup update`
-- Xcode Command Line Tools (Mac)
+- Docker — used by `npm run dev` to run the local backend stack
+- Rust stable — `rustup update` (only for Tauri desktop builds)
+- Xcode Command Line Tools (Mac, only for Tauri desktop builds)
 
 ### Setup
 
