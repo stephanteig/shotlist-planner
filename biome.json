@@ -6,7 +6,8 @@
       "node_modules/**",
       "src-tauri/target/**",
       "src-tauri/gen/**",
-      "pages-repo/**"
+      "pages-repo/**",
+      "infra/main.json"
     ]
   },
   "organizeImports": { "enabled": true },
