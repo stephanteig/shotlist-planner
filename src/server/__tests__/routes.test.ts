@@ -1,6 +1,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { createLocalJWKSet } from "jose";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { createBlobStore } from "../blob";
 import { createApp } from "../index";
 import { type TestSigner, makeTestSigner } from "./fixtures";
 
@@ -32,7 +33,7 @@ describe("API routes", () => {
     await resetContainer();
     app = createApp({
       verifier: { projectId: PROJECT_ID, jwks: createLocalJWKSet(signer.jwks) },
-      blob: { connectionString: AZURITE_CONNECTION, container: CONTAINER },
+      store: createBlobStore({ connectionString: AZURITE_CONNECTION, container: CONTAINER }),
       serveStatic: false,
     });
   });

@@ -101,7 +101,7 @@ git clone https://github.com/stephanteig/shotlist-planner.git
 cd shotlist-planner
 npm install
 cp .env.example .env.local   # fill in Firebase values
-docker compose up             # runs Azurite + Vite (5173) + Hono (8080)
+npm run dev                   # runs Azurite + Vite (5173) + Hono (8080)
 ```
 
 Open http://localhost:5173 and sign in with Google. Data persists in the
@@ -115,7 +115,7 @@ npm run tauri:dev
 
 Desktop dev requires Rust stable (`rustup update`) and Xcode Command Line
 Tools on macOS. The Tauri window loads from Vite's dev server — run
-`docker compose up` first so the backend is reachable, or set
+`npm run dev` first so the backend is reachable, or set
 `VITE_API_URL=http://localhost:8080` in `.env.local` to talk to the
 locally-running Hono.
 
