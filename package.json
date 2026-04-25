@@ -10,7 +10,7 @@
     "dev:all": "concurrently -n vite,server \"npm:dev:web\" \"npm:dev:server\"",
     "vite:dev": "vite",
     "vite:build": "vite build",
-    "build:server": "tsc -p tsconfig.server.json",
+    "build:server": "esbuild src/server/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/server/index.js --packages=external",
     "build": "npm run build:server && npm run vite:build",
     "start": "node dist/server/index.js",
     "test": "vitest run",

@@ -31,4 +31,4 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 USER node
 EXPOSE 8080
-CMD ["node", "dist/server/server/index.js"]
+CMD ["node", "dist/server/index.js"]
